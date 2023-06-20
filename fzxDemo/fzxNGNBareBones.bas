@@ -81,8 +81,6 @@ SUB buildScene
   'Initialize camera
   __fzxCamera.zoom = 1
   fzxCalculateFOV
-  ' Set camera position
-  fzxVector2DSet __fzxCamera.position, __fzxWorld.spawn.x, __fzxWorld.spawn.y - 300
 
   '********************************************************
   '   Setup World
@@ -92,6 +90,9 @@ SUB buildScene
   fzxVector2DSet __fzxWorld.plusLimit, 200000, 200000
   fzxVector2DSet __fzxWorld.spawn, 0, 0
   fzxVector2DSet __fzxWorld.gravity, 0.0, 10.0
+
+  ' Set camera position
+  fzxVector2DSet __fzxCamera.position, __fzxWorld.spawn.x, __fzxWorld.spawn.y - 300
 
   ' Some math used on the impulse side
   ' Todo: move this elsewhere
