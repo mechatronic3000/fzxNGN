@@ -11,7 +11,7 @@ _TITLE "fzxNGN Bare Bones"
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM AS LONG iterations: iterations = 2
+DIM AS LONG iterations: iterations = 100
 DIM SHARED AS DOUBLE dt: dt = 1 / 60
 
 '**********************************************************************************************
@@ -112,30 +112,16 @@ END SUB
 
 SUB renderBodies STATIC
   DIM i AS LONG
-  DIM AS tFZX_VECTOR2d scSize, scMid, scUpperLeft, camUpperLeft, aabbUpperLeft, aabbSize, aabbHalfSize
+
   DIM AS LONG ub: ub = UBOUND(__fzxBody)
-
-  ' Todo : move this to camera functions
-  fzxVector2DSet aabbSize, 40000, 40000
-  fzxVector2DSet aabbHalfSize, aabbSize.x / 2, aabbSize.y / 2
-
-  fzxVector2DSet scUpperLeft, 0, 0
-  fzxVector2DSet scSize, _WIDTH, _HEIGHT
-
-  fzxVector2DDivideScalarND scMid, scSize, 2
-  fzxVector2DSubVectorND camUpperLeft, __fzxCamera.position, scMid
 
   'Draw all of the bodies that are visible
   i = 0: DO WHILE i < ub
-    IF __fzxBody(i).enable THEN
-      'fzxAABB to cut down on rendering objects out of camera view
-      fzxVector2DSubVectorND aabbUpperLeft, __fzxBody(i).fzx.position, aabbHalfSize
-      IF fzxAABBOverlap(camUpperLeft.x, camUpperLeft.y, scSize.x, scSize.y, aabbUpperLeft.x, aabbUpperLeft.y, aabbSize.x, aabbSize.y) THEN
-        IF __fzxBody(i).shape.ty = cFZX_SHAPE_CIRCLE THEN
-          renderWireFrameCircle i, _RGB32(0, 255, 0)
-        ELSE IF __fzxBody(i).shape.ty = cFZX_SHAPE_POLYGON THEN
-            renderWireFramePoly i
-          END IF
+    IF __fzxBody(i).enable AND __fzxBody(i).objectHash <> 0 THEN
+      IF __fzxBody(i).shape.ty = cFZX_SHAPE_CIRCLE THEN
+        renderWireFrameCircle i, _RGB32(0, 255, 0)
+      ELSE IF __fzxBody(i).shape.ty = cFZX_SHAPE_POLYGON THEN
+          renderWireFramePoly i
         END IF
       END IF
     END IF

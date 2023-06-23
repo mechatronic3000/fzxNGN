@@ -410,6 +410,7 @@ SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
       __fzxBody(index).enable = 0
       __fzxBody(index).overwrite = 1
       __fzxBody(index).objectName = ""
+      __fzxBody(index).objectHash = 0
     ELSE
       'remove the bodys attached to it
       iter = index: DO
@@ -598,8 +599,8 @@ SUB fzxBodySetStatic (index AS LONG, arg AS LONG)
   __fzxBody(index).fzx.invMass = 0.0
 END SUB
 
-FUNCTION fzxBodyAtRest (index AS LONG)
-  fzxBodyAtRest = (__fzxBody(index).fzx.velocity.x < 1 AND __fzxBody(index).fzx.velocity.x > -1 AND __fzxBody(index).fzx.velocity.y < 1 AND __fzxBody(index).fzx.velocity.y > -1)
+FUNCTION fzxBodyAtRest (index AS LONG, minVel AS DOUBLE)
+  fzxBodyAtRest = (__fzxBody(index).fzx.velocity.x < minVel AND __fzxBody(index).fzx.velocity.x > -minVel AND __fzxBody(index).fzx.velocity.y < minVel AND __fzxBody(index).fzx.velocity.y > -minVel)
 END FUNCTION
 
 SUB fzxCopyBodies (body() AS tFZX_BODY, newBody() AS tFZX_BODY)
@@ -1007,6 +1008,7 @@ END SUB
 SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
   DIM AS LONG uB: uB = UBOUND(__fzxBody)
   DIM AS LONG uJ: uJ = UBOUND(__fzxJoints)
+  DIM AS LONG uH: uH = UBOUND(__fzxHits)
   DIM A AS tFZX_BODY
   DIM B AS tFZX_BODY
   DIM contacts(uB) AS tFZX_VECTOR2d
@@ -1021,9 +1023,14 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
   DIM AS LONG i, j, k, index
   DIM hitCount AS LONG: hitCount = 0
 
-  REDIM __fzxHits(0) AS tFZX_HIT
-  __fzxHits(0).A = -1
-  __fzxHits(0).B = -1
+  'REDIM __fzxHits(0) AS tFZX_HIT
+  '__fzxHits(0).A = -1
+  '__fzxHits(0).B = -1
+  i = 0: DO WHILE i <= uH
+    __fzxHits(i).A = -1
+    __fzxHits(i).B = -1
+  i = i + 1: LOOP
+
   hitCount = 0
 
   i = 0: DO WHILE i < uB
