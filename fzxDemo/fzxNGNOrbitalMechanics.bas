@@ -19,6 +19,7 @@ DIM SHARED AS DOUBLE dt: dt = 1 / 60
 '**********************************************************************************************
 
 CONST cGRAVCONST = 1
+' To little for our simulation
 'CONST cGRAVCONST = 6.674E-11
 buildScene
 
@@ -48,24 +49,25 @@ SUB animatescene
   DIM AS LONG temp
   DIM AS DOUBLE vel, angle, sa, ca
 
-  ' Create a object on mouse click
+  ' Use the mouse wheel to set Camera Zoom
   __fzxCamera.zoom = fzxImpulseClamp(.001, 2, __fzxCamera.zoom - (__fzxInputDevice.mouse.wCount * .001))
   __fzxInputDevice.mouse.wCount = 0
   fzxCalculateFOV
-  IF __fzxInputDevice.mouse.b2.PosEdge THEN
 
+  ' Move the Camera to where you right clicked
+  IF __fzxInputDevice.mouse.b2.PosEdge THEN
     fzxVector2DSet __fzxCamera.position, __fzxInputDevice.mouse.worldPosition.x, __fzxInputDevice.mouse.worldPosition.y
   END IF
 
-
+  ' Give on screen visual, for how hard you are drawing back the velocity
   IF __fzxInputDevice.mouse.b1.drag THEN
     CIRCLE (__fzxInputDevice.mouse.b1.anchorPosition.x, __fzxInputDevice.mouse.b1.anchorPosition.y), 3, _RGB32(255, 255, 0)
     LINE (__fzxInputDevice.mouse.b1.anchorPosition.x, __fzxInputDevice.mouse.b1.anchorPosition.y)-(__fzxInputDevice.mouse.position.x, __fzxInputDevice.mouse.position.y), _RGB32(0, 0, 127), , &B1110110111011011
     CIRCLE (__fzxInputDevice.mouse.position.x, __fzxInputDevice.mouse.position.y), 3, _RGB32(255, 0, 0)
   END IF
-  IF __fzxInputDevice.mouse.b1.NegEdge THEN
 
-    ' Drop a ball
+  ' Release the orbital body
+  IF __fzxInputDevice.mouse.b1.NegEdge THEN
     vel = fzxVector2DDistance(__fzxInputDevice.mouse.b1.anchorPosition, __fzxInputDevice.mouse.position) * __fzxCamera.invZoom
 
     angle = getangle(__fzxInputDevice.mouse.b1.anchorPosition.x, __fzxInputDevice.mouse.b1.anchorPosition.y, __fzxInputDevice.mouse.position.x, __fzxInputDevice.mouse.position.y)
@@ -76,7 +78,7 @@ SUB animatescene
     ' Set the bodies parameters
     ' Put the body where the mouse is on the screen
     fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxInputDevice.mouse.worldPosition.x, __fzxInputDevice.mouse.worldPosition.y
-    ' Give it the mouse's velocity, so you can throw it
+    ' Give it the mouse's velocity
     fzxSetBody cFZX_PARAMETER_VELOCITY, temp, sa, ca
     fzxSetBody cFZX_PARAMETER_STATICFRICTION, temp, 0.9, 0
     fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, temp, 0.7, 0
@@ -118,12 +120,6 @@ SUB buildScene
   ' Set camera position
   fzxVector2DSet __fzxCamera.position, __fzxWorld.spawn.x, __fzxWorld.spawn.y
 
-  ' Some math used on the impulse side
-  ' Todo: move this elsewhere
-  DIM o AS tFZX_VECTOR2d
-  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
-  __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
-
   '********************************************************
   '   Build Level
   '********************************************************
@@ -139,8 +135,8 @@ END SUB
 SUB gravitizeEverthing
   DIM AS LONG i, j, touch
   DIM AS LONG ub: ub = UBOUND(__fzxBody)
-  DIM AS DOUBLE angle, sa, ca, gv, dist, newRAd
-  DIM AS tFZX_VECTOR2d v1, v2
+  DIM AS DOUBLE gv, dist, newRAd
+  DIM AS tFZX_VECTOR2d v1
   i = 0: DO WHILE i < ub
     j = 0: DO WHILE j < ub
       IF __fzxBody(i).enable AND __fzxBody(i).objectHash <> 0 AND __fzxBody(j).enable AND __fzxBody(j).objectHash <> 0 AND i <> j THEN
@@ -159,9 +155,10 @@ SUB gravitizeEverthing
       j = j + 1
     LOOP
 
-    touch = fzxIsBodyTouching(i)
+    ' Bodies can absorb each other
+    touch = fzxIsBodyTouching(i) ' Who's touching me?
     IF touch > 0 THEN
-      IF __fzxBody(i).fzx.mass > __fzxBody(touch).fzx.mass THEN
+      IF __fzxBody(i).fzx.mass > __fzxBody(touch).fzx.mass THEN ' Who's bigger?
         newRAd = addCircles(__fzxBody(i).shape.radius, __fzxBody(touch).shape.radius)
         __fzxBody(i).shape.radius = newRAd
         fzxCircleComputeMass i, cFZX_MASS_DENSITY
@@ -173,7 +170,6 @@ SUB gravitizeEverthing
         fzxBodyDelete i, 0
       END IF
     END IF
-
     i = i + 1
   LOOP
 
@@ -209,7 +205,7 @@ SUB renderBodies STATIC
   LOOP
 END SUB
 
-' Function written bu Galleon (modified)
+' Function written bu Galleon (modified for using radians)
 FUNCTION getangle# (x1 AS DOUBLE, y1 AS DOUBLE, x2 AS DOUBLE, y2 AS DOUBLE) 'returns 0-359.99...
   IF y2 = y1 THEN
     IF x1 = x2 THEN EXIT FUNCTION
@@ -233,12 +229,9 @@ END FUNCTION
 
 
 SUB renderWireFrameCircle (index AS LONG, c AS LONG)
-  DIM AS tFZX_VECTOR2d o1, o2
+  DIM AS tFZX_VECTOR2d o1
   fzxWorldToCameraEx __fzxBody(index).fzx.position, o1
   CIRCLE (o1.x, o1.y), __fzxBody(index).shape.radius * __fzxCamera.zoom, c
-  'o2.x = o1.x + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * COS(__fzxBody(index).fzx.orient)
-  'o2.y = o1.y + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * SIN(__fzxBody(index).fzx.orient)
-  'LINE (o1.x, o1.y)-(o2.x, o2.y), c
 END SUB
 
 SUB renderWireFramePoly (index AS LONG)
