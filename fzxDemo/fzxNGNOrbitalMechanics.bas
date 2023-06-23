@@ -11,8 +11,8 @@ _TITLE "fzxNGN Orbital Mechanics"
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM AS LONG iterations: iterations = 1
-DIM SHARED AS DOUBLE dt: dt = 1 / 30
+DIM AS LONG iterations: iterations = 10
+DIM SHARED AS DOUBLE dt: dt = 1 / 60
 
 '**********************************************************************************************
 ' Build the playfield
@@ -45,12 +45,11 @@ SYSTEM
 '**********************************************************************************************
 
 SUB animatescene
-  DIM AS LONG temp, planet
-  DIM AS tFZX_VECTOR2d scPos
+  DIM AS LONG temp
   DIM AS DOUBLE vel, angle, sa, ca
 
   ' Create a object on mouse click
-  __fzxCamera.zoom = fzxImpulseClamp(.001, 2, __fzxCamera.zoom + (__fzxInputDevice.mouse.wCount * .001))
+  __fzxCamera.zoom = fzxImpulseClamp(.001, 2, __fzxCamera.zoom - (__fzxInputDevice.mouse.wCount * .001))
   __fzxInputDevice.mouse.wCount = 0
   fzxCalculateFOV
   IF __fzxInputDevice.mouse.b2.PosEdge THEN
@@ -92,6 +91,8 @@ SUB animatescene
   PRINT "Simple Gravity Mechanics Simulator"
   PRINT "Click and drag left mouse button to add a object and give it velocity."
   PRINT "Right click to move the camera. Use mouse wheel to zoom."
+
+  IF fzxBodyManagerID("planetX") >= 0 THEN LOCATE 45: PRINT USING "PlanetX mass:#######.#"; __fzxBody(fzxBodyManagerID("planetX")).fzx.mass
 END SUB
 
 '********************************************************
@@ -127,7 +128,7 @@ SUB buildScene
   '   Build Level
   '********************************************************
 
-  temp = fzxCreateCircleBodyEx("planet1", 800)
+  temp = fzxCreateCircleBodyEx("planetX", 800)
   fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxWorld.spawn.x, __fzxWorld.spawn.y
   fzxSetBody cFZX_PARAMETER_STATICFRICTION, temp, 0.9, 0
   fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, temp, 0.7, 0
@@ -136,28 +137,58 @@ SUB buildScene
 END SUB
 
 SUB gravitizeEverthing
-  DIM AS LONG i, j
+  DIM AS LONG i, j, touch
   DIM AS LONG ub: ub = UBOUND(__fzxBody)
-  DIM AS DOUBLE angle, sa, ca, gv, dist
+  DIM AS DOUBLE angle, sa, ca, gv, dist, newRAd
+  DIM AS tFZX_VECTOR2d v1, v2
   i = 0: DO WHILE i < ub
     j = 0: DO WHILE j < ub
       IF __fzxBody(i).enable AND __fzxBody(i).objectHash <> 0 AND __fzxBody(j).enable AND __fzxBody(j).objectHash <> 0 AND i <> j THEN
-        ' Some math guru's can easily simplify this
-        angle = getangle(__fzxBody(i).fzx.position.x, __fzxBody(i).fzx.position.y, __fzxBody(j).fzx.position.x, __fzxBody(j).fzx.position.y)
-        sa = SIN(angle) * 100000000
-        ca = COS(angle) * 100000000
+
         dist = fzxVector2DDistance(__fzxBody(i).fzx.position, __fzxBody(j).fzx.position)
         gv = (cGRAVCONST * ((__fzxBody(i).fzx.mass * __fzxBody(j).fzx.mass) / (dist * dist)))
-        __fzxBody(i).fzx.force.x = __fzxBody(i).fzx.force.x + (gv * sa)
-        __fzxBody(i).fzx.force.y = __fzxBody(i).fzx.force.y - (gv * ca)
 
+        ' Some math guru's can easily simplify this
+        fzxVector2DSubVectorND v1, __fzxBody(i).fzx.position, __fzxBody(j).fzx.position '(o AS tFZX_VECTOR2d, v AS tFZX_VECTOR2d, m AS tFZX_VECTOR2d)
+        fzxVector2DNormalize v1
+        fzxVector2DMultiplyScalar v1, 100000000
+
+        __fzxBody(i).fzx.force.x = __fzxBody(i).fzx.force.x - (gv * v1.x)
+        __fzxBody(i).fzx.force.y = __fzxBody(i).fzx.force.y - (gv * v1.y)
       END IF
       j = j + 1
     LOOP
+
+    touch = fzxIsBodyTouching(i)
+    IF touch > 0 THEN
+      IF __fzxBody(i).fzx.mass > __fzxBody(touch).fzx.mass THEN
+        newRAd = addCircles(__fzxBody(i).shape.radius, __fzxBody(touch).shape.radius)
+        __fzxBody(i).shape.radius = newRAd
+        fzxCircleComputeMass i, cFZX_MASS_DENSITY
+        fzxBodyDelete touch, 0
+      ELSE
+        newRAd = addCircles(__fzxBody(i).shape.radius, __fzxBody(touch).shape.radius)
+        __fzxBody(touch).shape.radius = newRAd
+        fzxCircleComputeMass touch, cFZX_MASS_DENSITY
+        fzxBodyDelete i, 0
+      END IF
+    END IF
+
     i = i + 1
   LOOP
 
 END SUB
+
+FUNCTION addCircles# (r1 AS DOUBLE, r2 AS DOUBLE)
+  DIM AS DOUBLE a1, a2
+  a1 = _PI * r1 * r1
+  a2 = _PI * r2 * r2
+  addCircles = areaToRadius(a1 + a2)
+END FUNCTION
+
+FUNCTION areaToRadius# (area AS DOUBLE)
+  areaToRadius = SQR(area / _PI)
+END FUNCTION
 
 SUB renderBodies STATIC
   DIM AS LONG i
