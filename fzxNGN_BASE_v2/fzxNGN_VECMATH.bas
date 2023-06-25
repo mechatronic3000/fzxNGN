@@ -247,5 +247,30 @@ $IF FZXVECMATHINCLUDE = UNDEFINED THEN
     o.y = (v1.y + v2.y) / 2
   END SUB
 
+  FUNCTION fzxGetAngleVector2d# (p1 AS tFZX_VECTOR2d, p2 AS tFZX_VECTOR2d)
+    fzxGetAngleVector2d = fzxGetAngle(p1.x, p1.y, p2.x, p2.y)
+  END FUNCTION
+
+  ' Function written bu Galleon (modified for using radians)
+  FUNCTION fzxGetAngle# (x1 AS DOUBLE, y1 AS DOUBLE, x2 AS DOUBLE, y2 AS DOUBLE) 'returns 0-359.99...
+    IF y2 = y1 THEN
+      IF x1 = x2 THEN EXIT FUNCTION
+      IF x2 > x1 THEN fzxGetAngle# = _PI * .5 ELSE fzxGetAngle# = _PI * 1.5
+      EXIT FUNCTION
+    END IF
+    IF x2 = x1 THEN
+      IF y2 > y1 THEN fzxGetAngle# = _PI
+      EXIT FUNCTION
+    END IF
+    IF y2 < y1 THEN
+      IF x2 > x1 THEN
+        fzxGetAngle# = -ATN((x2 - x1) / (y2 - y1))
+      ELSE
+        fzxGetAngle# = -ATN((x2 - x1) / (y2 - y1)) + (2 * _PI)
+      END IF
+    ELSE
+      fzxGetAngle# = -ATN((x2 - x1) / (y2 - y1)) + _PI
+    END IF
+  END FUNCTION
 
 $END IF

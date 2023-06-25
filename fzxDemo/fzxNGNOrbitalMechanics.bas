@@ -14,11 +14,12 @@ SCREEN _NEWIMAGE(1024, 768, 32)
 DIM AS LONG iterations: iterations = 10
 DIM SHARED AS DOUBLE dt: dt = 1 / 60
 
+
 '**********************************************************************************************
 ' Build the playfield
 '**********************************************************************************************
 
-CONST cGRAVCONST = 1
+CONST cGRAVCONST = 100000000
 ' To little for our simulation
 'CONST cGRAVCONST = 6.674E-11
 buildScene
@@ -69,8 +70,7 @@ SUB animatescene
   ' Release the orbital body
   IF __fzxInputDevice.mouse.b1.NegEdge THEN
     vel = fzxVector2DDistance(__fzxInputDevice.mouse.b1.anchorPosition, __fzxInputDevice.mouse.position) * __fzxCamera.invZoom
-
-    angle = getangle(__fzxInputDevice.mouse.b1.anchorPosition.x, __fzxInputDevice.mouse.b1.anchorPosition.y, __fzxInputDevice.mouse.position.x, __fzxInputDevice.mouse.position.y)
+    angle = fzxGetAngleVector2d#(__fzxInputDevice.mouse.b1.anchorPosition, __fzxInputDevice.mouse.position)
     sa = -SIN(angle) * vel
     ca = COS(angle) * vel
 
@@ -144,10 +144,8 @@ SUB gravitizeEverthing
         dist = fzxVector2DDistance(__fzxBody(i).fzx.position, __fzxBody(j).fzx.position)
         gv = (cGRAVCONST * ((__fzxBody(i).fzx.mass * __fzxBody(j).fzx.mass) / (dist * dist)))
 
-        ' Some math guru's can easily simplify this
-        fzxVector2DSubVectorND v1, __fzxBody(i).fzx.position, __fzxBody(j).fzx.position '(o AS tFZX_VECTOR2d, v AS tFZX_VECTOR2d, m AS tFZX_VECTOR2d)
+        fzxVector2DSubVectorND v1, __fzxBody(i).fzx.position, __fzxBody(j).fzx.position
         fzxVector2DNormalize v1
-        fzxVector2DMultiplyScalar v1, 100000000
 
         __fzxBody(i).fzx.force.x = __fzxBody(i).fzx.force.x - (gv * v1.x)
         __fzxBody(i).fzx.force.y = __fzxBody(i).fzx.force.y - (gv * v1.y)
