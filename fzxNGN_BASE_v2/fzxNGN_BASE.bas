@@ -577,6 +577,96 @@ SUB fzxSetBodyEx (parameter AS LONG, objName AS STRING, arg1 AS DOUBLE, arg2 AS 
   END IF
 END SUB
 
+
+FUNCTION fzxGetBodyD# (Parameter AS LONG, Index AS LONG, arg AS _BYTE)
+  'CONST cFZX_ARGUMENT_X = 1
+  'CONST cFZX_ARGUMENT_Y = 2
+  SELECT CASE Parameter
+    CASE cFZX_PARAMETER_POSITION:
+      IF arg = cFZX_ARGUMENT_X THEN
+        fzxGetBodyD = __fzxBody(Index).fzx.position.x
+      ELSE
+        fzxGetBodyD = __fzxBody(Index).fzx.position.y
+      END IF
+    CASE cFZX_PARAMETER_VELOCITY:
+      IF arg = cFZX_ARGUMENT_X THEN
+        fzxGetBodyD = __fzxBody(Index).fzx.velocity.x
+      ELSE
+        fzxGetBodyD = __fzxBody(Index).fzx.velocity.y
+      END IF
+    CASE cFZX_PARAMETER_FORCE:
+      IF arg = cFZX_ARGUMENT_X THEN
+        fzxGetBodyD = __fzxBody(Index).fzx.force.x
+      ELSE
+        fzxGetBodyD = __fzxBody(Index).fzx.force.y
+      END IF
+    CASE cFZX_PARAMETER_ANGULARVELOCITY:
+      fzxGetBodyD = __fzxBody(Index).fzx.angularVelocity
+    CASE cFZX_PARAMETER_TORQUE:
+      fzxGetBodyD = __fzxBody(Index).fzx.torque
+    CASE cFZX_PARAMETER_ORIENT:
+      fzxGetBodyD = __fzxBody(Index).fzx.orient
+    CASE cFZX_PARAMETER_STATICFRICTION:
+      fzxGetBodyD = __fzxBody(Index).fzx.staticFriction
+    CASE cFZX_PARAMETER_DYNAMICFRICTION:
+      fzxGetBodyD = __fzxBody(Index).fzx.dynamicFriction
+    CASE cFZX_PARAMETER_RESTITUTION:
+      fzxGetBodyD = __fzxBody(Index).fzx.restitution
+    CASE cFZX_PARAMETER_COLOR:
+      '__fzxBody(Index).c = arg1
+    CASE cFZX_PARAMETER_ENABLE:
+      '__fzxBody(Index).enable = arg1
+    CASE cFZX_PARAMETER_STATIC:
+      'fzxBodySetStatic Index, arg1
+    CASE cFZX_PARAMETER_TEXTURE:
+      '__fzxBody(Index).shape.texture = arg1
+    CASE cFZX_PARAMETER_FLIPTEXTURE: 'does the texture flip directions when moving left or right
+      '__fzxBody(Index).shape.flipTexture = arg1
+    CASE cFZX_PARAMETER_SCALETEXTURE:
+      '__fzxBody(Index).shape.scaleTexture.x = arg1
+      '__fzxBody(Index).shape.scaleTexture.y = arg2
+    CASE cFZX_PARAMETER_OFFSETTEXTURE:
+      '__fzxBody(Index).shape.offsetTexture.x = arg1
+      '__fzxBody(Index).shape.offsetTexture.y = arg2
+    CASE cFZX_PARAMETER_COLLISIONMASK:
+      '__fzxBody(Index).collisionMask = arg1
+    CASE cFZX_PARAMETER_INVERTNORMALS:
+      'IF arg1 THEN fzxPolygonInvertNormals Index
+    CASE cFZX_PARAMETER_NOPHYSICS:
+      '__fzxBody(Index).noPhysics = arg1
+    CASE cFZX_PARAMETER_SPECIALFUNCTION:
+      '__fzxBody(Index).specFunc.func = arg1
+      '__fzxBody(Index).specFunc.arg = arg2
+    CASE cFZX_PARAMETER_RENDERORDER:
+      '__fzxBody(Index).shape.renderOrder = arg1
+    CASE cFZX_PARAMETER_ENTITYID:
+      '__fzxBody(Index).entityID = arg1
+    CASE cFZX_PARAMETER_LIFETIME:
+      '__fzxBody(Index).lifetime.start = TIMER(.001)
+      '__fzxBody(Index).lifetime.duration = arg1
+    CASE cFZX_PARAMETER_REPEATTEXTURE
+      'IF __fzxBody(Index).shape.uv0.x <> 0 THEN __fzxBody(Index).shape.uv0.x = arg1
+      'IF __fzxBody(Index).shape.uv0.y <> 0 THEN __fzxBody(Index).shape.uv0.y = arg2
+      'IF __fzxBody(Index).shape.uv1.x <> 0 THEN __fzxBody(Index).shape.uv1.x = arg1
+      'IF __fzxBody(Index).shape.uv1.y <> 0 THEN __fzxBody(Index).shape.uv1.y = arg2
+      'IF __fzxBody(Index).shape.uv2.x <> 0 THEN __fzxBody(Index).shape.uv2.x = arg1
+      'IF __fzxBody(Index).shape.uv2.y <> 0 THEN __fzxBody(Index).shape.uv2.y = arg2
+      'IF __fzxBody(Index).shape.uv3.x <> 0 THEN __fzxBody(Index).shape.uv3.x = arg1
+      'IF __fzxBody(Index).shape.uv3.y <> 0 THEN __fzxBody(Index).shape.uv3.y = arg2
+    CASE cFZX_PARAMETER_ZPOSITION
+      '__fzxBody(Index).zPosition = arg1
+    CASE cFZX_PARAMETER_UV0
+      'fzxVector2DSet __fzxBody(Index).shape.uv0, arg1, arg2
+    CASE cFZX_PARAMETER_UV1
+      'fzxVector2DSet __fzxBody(Index).shape.uv1, arg1, arg2
+    CASE cFZX_PARAMETER_UV2
+      'fzxVector2DSet __fzxBody(Index).shape.uv2, arg1, arg2
+    CASE cFZX_PARAMETER_UV3
+      'fzxVector2DSet __fzxBody(Index).shape.uv3, arg1, arg2
+  END SELECT
+
+END FUNCTION
+
 SUB fzxBodyStop (index AS LONG)
   fzxVector2DSet __fzxBody(index).fzx.velocity, 0, 0
   __fzxBody(index).fzx.angularVelocity = 0

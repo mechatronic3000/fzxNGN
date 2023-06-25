@@ -203,28 +203,6 @@ SUB renderBodies STATIC
   LOOP
 END SUB
 
-' Function written bu Galleon (modified for using radians)
-FUNCTION getangle# (x1 AS DOUBLE, y1 AS DOUBLE, x2 AS DOUBLE, y2 AS DOUBLE) 'returns 0-359.99...
-  IF y2 = y1 THEN
-    IF x1 = x2 THEN EXIT FUNCTION
-    IF x2 > x1 THEN getangle# = _PI * .5 ELSE getangle# = _PI * 1.5
-    EXIT FUNCTION
-  END IF
-  IF x2 = x1 THEN
-    IF y2 > y1 THEN getangle# = _PI
-    EXIT FUNCTION
-  END IF
-  IF y2 < y1 THEN
-    IF x2 > x1 THEN
-      getangle# = -ATN((x2 - x1) / (y2 - y1))
-    ELSE
-      getangle# = -ATN((x2 - x1) / (y2 - y1)) + (2 * _PI)
-    END IF
-  ELSE
-    getangle# = -ATN((x2 - x1) / (y2 - y1)) + _PI
-  END IF
-END FUNCTION
-
 
 SUB renderWireFrameCircle (index AS LONG, c AS LONG)
   DIM AS tFZX_VECTOR2d o1
