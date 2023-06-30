@@ -1113,9 +1113,6 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
   DIM AS LONG i, j, k, index
   DIM hitCount AS LONG: hitCount = 0
 
-  'REDIM __fzxHits(0) AS tFZX_HIT
-  '__fzxHits(0).A = -1
-  '__fzxHits(0).B = -1
   i = 0: DO WHILE i <= uH
     __fzxHits(i).A = -1
     __fzxHits(i).B = -1
