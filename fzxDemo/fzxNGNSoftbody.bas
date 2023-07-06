@@ -66,6 +66,7 @@ SUB animatescene
 
   temp = fzxBodyManagerID("masher")
   fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxInputDevice.mouse.worldPosition.x, __fzxInputDevice.mouse.worldPosition.y
+
   IF _KEYDOWN(18432) THEN ' arrow up
     bias = bias + 10
     setAllJoinstBias bias
