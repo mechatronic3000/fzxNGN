@@ -192,6 +192,46 @@ FUNCTION fzxCreateTrapBodyEx (objName AS STRING, xs AS DOUBLE, ys AS DOUBLE, yof
   fzxCreateTrapBodyEx = index
 END FUNCTION
 
+SUB fzxCreatepolyBody (index AS LONG, xs AS DOUBLE, ys AS DOUBLE, sides AS LONG)
+  DIM shape AS tFZX_SHAPE
+  fzxShapeCreate shape, cFZX_SHAPE_POLYGON, 0
+  fzxBodyCreate index, shape
+  fzxPolyCreate index, xs, ys, sides
+  fzxPolygonInitialize index
+  __fzxBody(index).c = _RGB32(255, 255, 255)
+END SUB
+
+
+FUNCTION fzxCreatePolyBodyEx (objName AS STRING, xs AS DOUBLE, ys AS DOUBLE, sides AS LONG)
+  DIM shape AS tFZX_SHAPE
+  DIM index AS LONG
+  fzxShapeCreate shape, cFZX_SHAPE_POLYGON, 0
+  fzxBodyCreateEx objName, shape, index
+  fzxPolyCreate index, xs, ys, sides
+  fzxPolygonInitialize index
+  __fzxBody(index).c = _RGB32(255, 255, 255)
+  fzxCreatePolyBodyEx = index
+END FUNCTION
+
+
+SUB fzxPolyCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS LONG)
+  IF sides < 2 THEN sides = 2
+  IF sides > cMAXVERTSPERBODY THEN sides = cMAXVERTSPERBODY
+
+  DIM vertlength AS LONG: vertlength = sides
+  DIM AS DOUBLE theta
+  DIM verts(vertlength) AS tFZX_VECTOR2d
+  DIM AS LONG vertCount: vertCount = 0
+
+  __fzxBody(index).shape.maxDimension.x = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
+  __fzxBody(index).shape.maxDimension.y = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
+
+  FOR theta = 0 TO 359 STEP (360 / sides)
+    fzxVector2DSet verts(vertCount), sizex * COS(_D2R(theta)), sizey * SIN(_D2R(theta))
+    vertCount = vertCount + 1
+  NEXT
+  fzxVertexSet index, verts()
+END SUB
 
 SUB fzxBodyCreate (index AS LONG, shape AS tFZX_SHAPE)
   fzxVector2DSet __fzxBody(index).fzx.position, 0, 0
@@ -664,6 +704,8 @@ FUNCTION fzxGetBodyD# (Parameter AS LONG, Index AS LONG, arg AS _BYTE)
       'fzxVector2DSet __fzxBody(Index).shape.uv2, arg1, arg2
     CASE cFZX_PARAMETER_UV3
       'fzxVector2DSet __fzxBody(Index).shape.uv3, arg1, arg2
+    CASE CFZX_PARAMETER_POLYCOUNT
+      fzxGetBodyD = __fzxBody(Index).pa.count
   END SELECT
 
 END FUNCTION

@@ -51,7 +51,7 @@ SUB animatescene
     IF RND > .5 THEN
       temp = fzxCreateCircleBodyEx("b" + _TRIM$(STR$(RND * 1000000000)), 10)
     ELSE
-      temp = fzxCreateBoxBodyEx("b" + _TRIM$(STR$(RND * 1000000000)), 10, 10)
+      temp = fzxCreatePolyBodyEx("b" + _TRIM$(STR$(RND * 1000000000)), 10, 10, 3 + INT(RND * 5))
     END IF
     ' Set the bodies parameters
     ' Put the body where the mouse is on the screen
@@ -66,7 +66,7 @@ SUB animatescene
     fzxSetBody cFZX_PARAMETER_STATICFRICTION, temp, .1, 0
     fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, temp, .85, 0
     ' Bodies wont live forever
-    fzxSetBody cFZX_PARAMETER_LIFETIME, temp, RND * 20 + 10, 0
+    fzxSetBody cFZX_PARAMETER_LIFETIME, temp, RND * 20 + 60, 0
   END IF
 
 END SUB
@@ -139,25 +139,18 @@ SUB renderWireFrameCircle (index AS LONG, c AS LONG)
   LINE (o1.x, o1.y)-(o2.x, o2.y), c
 END SUB
 
-SUB renderWireFramePoly (index AS LONG)
-  DIM vert(3) AS tFZX_VECTOR2d
+SUB renderWireFramePoly (index AS LONG) STATIC
+  DIM AS LONG polyCount, i
+  polyCount = fzxGetBodyD(CFZX_PARAMETER_POLYCOUNT, index, 0)
+  DIM AS tFZX_VECTOR2d vert1, vert2
+  i = 0: DO WHILE i <= polyCount
+    fzxGetBodyVert index, i, vert1
+    fzxGetBodyVert index, fzxArrayNextIndex(i, polyCount), vert2
 
-  fzxGetBodyVert index, 0, vert(0)
-  fzxWorldToCamera index, vert(0)
-
-  fzxGetBodyVert index, 1, vert(1)
-  fzxWorldToCamera index, vert(1)
-
-  fzxGetBodyVert index, 2, vert(2)
-  fzxWorldToCamera index, vert(2)
-
-  fzxGetBodyVert index, 3, vert(3)
-  fzxWorldToCamera index, vert(3)
-
-  LINE (vert(0).x, vert(0).y)-(vert(1).x, vert(1).y), _RGB(0, 255, 0)
-  LINE (vert(1).x, vert(1).y)-(vert(2).x, vert(2).y), _RGB(0, 255, 0)
-  LINE (vert(2).x, vert(2).y)-(vert(3).x, vert(3).y), _RGB(0, 255, 0)
-  LINE (vert(3).x, vert(3).y)-(vert(0).x, vert(0).y), _RGB(0, 255, 0)
+    fzxWorldToCamera index, vert1
+    fzxWorldToCamera index, vert2
+    LINE (vert1.x, vert1.y)-(vert2.x, vert2.y), _RGB(0, 255, 0)
+  i = i + 1: LOOP
 END SUB
 
 
