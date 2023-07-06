@@ -493,7 +493,7 @@ END SUB
 SUB _______________BODY_PARAMETER_FUNCTIONS: END SUB
 
 SUB fzxSetBody (Parameter AS LONG, Index AS LONG, arg1 AS DOUBLE, arg2 AS DOUBLE)
-
+  IF Index < 0 OR Index > UBOUND(__fzxBody) THEN EXIT SUB
   SELECT CASE Parameter
     CASE cFZX_PARAMETER_POSITION:
       fzxVector2DSet __fzxBody(Index).fzx.position, arg1, arg2
@@ -581,6 +581,7 @@ END SUB
 FUNCTION fzxGetBodyD# (Parameter AS LONG, Index AS LONG, arg AS _BYTE)
   'CONST cFZX_ARGUMENT_X = 1
   'CONST cFZX_ARGUMENT_Y = 2
+  IF Index < 0 OR Index > UBOUND(__fzxBody) THEN EXIT FUNCTION
   SELECT CASE Parameter
     CASE cFZX_PARAMETER_POSITION:
       IF arg = cFZX_ARGUMENT_X THEN
@@ -1414,8 +1415,10 @@ END SUB
 '**********************************************************************************************
 SUB _______________JOINT_CREATION_FUNCTIONS: END SUB
 FUNCTION fzxJointCreate (b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
-  DIM AS LONG iter, uB
+  IF b1 < 0 OR b1 > UBOUND(__fzxJoints) OR b2 < 0 OR b2 > UBOUND(__fzxJoints) THEN EXIT FUNCTION
+  DIM AS LONG iter, uB, uBTemp
   uB = -1
+
   iter = 1: DO WHILE iter <= UBOUND(__fzxJoints)
     IF __fzxJoints(iter).overwrite = 1 THEN
       __fzxJoints(iter).overwrite = 0
@@ -1423,10 +1426,17 @@ FUNCTION fzxJointCreate (b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
       EXIT DO
     END IF
   iter = iter + 1: LOOP
+
   IF uB < 0 THEN
-    REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) + 1) AS tFZX_JOINT
+    uBTemp = UBOUND(__fzxJoints)
+    REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) * 1.1) AS tFZX_JOINT
     uB = UBOUND(__fzxJoints)
+    iter = uBTemp + 1: DO WHILE iter <= uB
+      __fzxJoints(iter).overwrite = 1
+    iter = iter + 1: LOOP
   END IF
+
+
   fzxJointSet uB, b1, b2, x, y
   'Joint name will default to a combination of the two objects that is connects.
   'If you change it you must also recompute the hash.
@@ -1437,7 +1447,8 @@ FUNCTION fzxJointCreate (b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
 END FUNCTION
 
 FUNCTION fzxJointCreateEx (b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anchor2 AS tFZX_VECTOR2d)
-  DIM AS LONG iter, uB
+  IF b1 < 0 OR b1 > UBOUND(__fzxJoints) OR b2 < 0 OR b2 > UBOUND(__fzxJoints) THEN EXIT FUNCTION
+  DIM AS LONG iter, uB, uBTemp
   uB = -1
   iter = 1: DO WHILE iter <= UBOUND(__fzxJoints)
     IF __fzxJoints(iter).overwrite = 1 THEN
@@ -1446,9 +1457,14 @@ FUNCTION fzxJointCreateEx (b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anc
       EXIT DO
     END IF
   iter = iter + 1: LOOP
+
   IF uB < 0 THEN
-    REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) + 1) AS tFZX_JOINT
+    uBTemp = UBOUND(__fzxJoints)
+    REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) * 1.1) AS tFZX_JOINT
     uB = UBOUND(__fzxJoints)
+    iter = uBTemp: DO WHILE iter <= uB
+      __fzxJoints(iter).overwrite = 1
+    iter = iter + 1: LOOP
   END IF
 
   fzxJointSetEx uB, b1, b2, anchor1, anchor2
@@ -1463,19 +1479,21 @@ END FUNCTION
 
 SUB fzxJointDelete (d AS LONG)
   'DIM AS LONG index
-  'IF d >= 0 AND d <= UBOUND(__fzxJoints) AND UBOUND(__fzxJoints) > 0 THEN
-  '  FOR index = d TO UBOUND(__fzxJoints) - 1
-  '    __fzxJoints(index) = __fzxJoints(index + 1)
-  '  NEXT
-  '  REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) - 1) AS tFZX_JOINT
-  'END IF
+  IF d >= 0 AND d <= UBOUND(__fzxJoints) THEN
+    '  FOR index = d TO UBOUND(__fzxJoints) - 1
+    '    __fzxJoints(index) = __fzxJoints(index + 1)
+    '  NEXT
+    '  REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) - 1) AS tFZX_JOINT
+    'END IF
 
-  __fzxJoints(d).overwrite = 1
-  __fzxJoints(d).jointName = ""
-  __fzxJoints(d).jointHash = 0
+    __fzxJoints(d).overwrite = 1
+    __fzxJoints(d).jointName = ""
+    __fzxJoints(d).jointHash = 0
+  END IF
 END SUB
 
 SUB fzxJointSet (index AS LONG, b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
+  IF b1 < 0 OR b1 > UBOUND(__fzxJoints) OR b2 < 0 OR b2 > UBOUND(__fzxJoints) THEN EXIT SUB
   DIM anchor AS tFZX_VECTOR2d
   fzxVector2DSet anchor, x, y
   DIM Rot1 AS tFZX_MATRIX2D: Rot1 = __fzxBody(b1).shape.u
@@ -1498,9 +1516,11 @@ SUB fzxJointSet (index AS LONG, b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE
   __fzxJoints(index).softness = 0.001
   __fzxJoints(index).biasFactor = 100
   __fzxJoints(index).max_bias = 100000
+  __fzxJoints(index).overwrite = 0
 END SUB
 
 SUB fzxJointSetEx (index AS LONG, b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anchor2 AS tFZX_VECTOR2d)
+  IF b1 < 0 OR b1 > UBOUND(__fzxJoints) OR b2 < 0 OR b2 > UBOUND(__fzxJoints) THEN EXIT SUB
   DIM Rot1 AS tFZX_MATRIX2D: Rot1 = __fzxBody(b1).shape.u
   DIM Rot2 AS tFZX_MATRIX2D: Rot2 = __fzxBody(b2).shape.u
   DIM Rot1T AS tFZX_MATRIX2D: fzxMatrix2x2Transpose Rot1, Rot1T
@@ -1521,6 +1541,7 @@ SUB fzxJointSetEx (index AS LONG, b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR
   __fzxJoints(index).softness = 0.001
   __fzxJoints(index).biasFactor = 100
   __fzxJoints(index).max_bias = 100000
+  __fzxJoints(index).overwrite = 0
 END SUB
 
 
@@ -1687,8 +1708,9 @@ END FUNCTION
 SUB _______________BODY_MANAGEMENT: END SUB
 
 FUNCTION fzxBodyManagerAdd ()
-  DIM AS LONG ub, iter
+  DIM AS LONG ub, iter, tempUb
   ub = UBOUND(__fzxBody)
+  ' Check for any available bodies to be overwritten
   iter = 0: DO WHILE iter <= ub
     IF __fzxBody(iter).overwrite THEN
       fzxBodyManagerAdd = iter
@@ -1697,7 +1719,15 @@ FUNCTION fzxBodyManagerAdd ()
     END IF
   iter = iter + 1: LOOP
   fzxBodyManagerAdd = ub
-  REDIM _PRESERVE __fzxBody(ub + 1) AS tFZX_BODY
+  ' Prepare the the newly added elements in the array for overwrite
+  tempUb = ub
+  ' Add 10% more bodies
+  REDIM _PRESERVE __fzxBody(ub * 1.1) AS tFZX_BODY
+  ub = UBOUND(__fzxBody)
+  iter = tempUb: DO WHILE iter <= ub
+    __fzxBody(iter).overwrite = 1
+  iter = iter + 1: LOOP
+
 END FUNCTION
 
 FUNCTION fzxBodyWithHash (hash AS _INTEGER64)
