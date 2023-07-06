@@ -1718,16 +1718,20 @@ FUNCTION fzxBodyManagerAdd ()
       EXIT FUNCTION
     END IF
   iter = iter + 1: LOOP
-  fzxBodyManagerAdd = ub
+
+
   ' Prepare the the newly added elements in the array for overwrite
-  tempUb = ub
-  ' Add 10% more bodies
-  REDIM _PRESERVE __fzxBody(ub * 1.1) AS tFZX_BODY
+  tempUb = ub + 1
+  ' Add more bodies
+  REDIM _PRESERVE __fzxBody(ub + 10) AS tFZX_BODY
   ub = UBOUND(__fzxBody)
+  ' mark these to be overwritten
   iter = tempUb: DO WHILE iter <= ub
     __fzxBody(iter).overwrite = 1
   iter = iter + 1: LOOP
 
+  __fzxBody(tempUb).overwrite = 0
+  fzxBodyManagerAdd = tempUb
 END FUNCTION
 
 FUNCTION fzxBodyWithHash (hash AS _INTEGER64)
