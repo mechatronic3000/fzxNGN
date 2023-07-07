@@ -192,7 +192,7 @@ FUNCTION fzxCreateTrapBodyEx (objName AS STRING, xs AS DOUBLE, ys AS DOUBLE, yof
   fzxCreateTrapBodyEx = index
 END FUNCTION
 
-SUB fzxCreatepolyBody (index AS LONG, xs AS DOUBLE, ys AS DOUBLE, sides AS LONG)
+SUB fzxCreatePolyBody (index AS LONG, xs AS DOUBLE, ys AS DOUBLE, sides AS LONG)
   DIM shape AS tFZX_SHAPE
   fzxShapeCreate shape, cFZX_SHAPE_POLYGON, 0
   fzxBodyCreate index, shape
@@ -214,6 +214,19 @@ FUNCTION fzxCreatePolyBodyEx (objName AS STRING, xs AS DOUBLE, ys AS DOUBLE, sid
 END FUNCTION
 
 
+FUNCTION fzxCreatePolyBodyTest (objName AS STRING, xs AS DOUBLE, ys AS DOUBLE, sides AS LONG) ' experimental
+  DIM shape AS tFZX_SHAPE
+  DIM index AS LONG
+  fzxShapeCreate shape, cFZX_SHAPE_POLYGON, 0
+  fzxBodyCreateEx objName, shape, index
+  fzxPolyCreateTest index, xs, ys, sides
+  fzxPolygonInitialize index
+  __fzxBody(index).c = _RGB32(255, 255, 255)
+  fzxCreatePolyBodyTest = index
+END FUNCTION
+
+
+
 SUB fzxPolyCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS LONG)
   IF sides < 2 THEN sides = 2
   IF sides > cMAXVERTSPERBODY THEN sides = cMAXVERTSPERBODY
@@ -231,6 +244,27 @@ SUB fzxPolyCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS LON
     vertCount = vertCount + 1
   NEXT
   fzxVertexSet index, verts()
+END SUB
+
+SUB fzxPolyCreateTest (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS LONG)
+  IF sides < 2 THEN sides = 2
+  IF sides > cMAXVERTSPERBODY THEN sides = cMAXVERTSPERBODY
+
+  DIM vertlength AS LONG: vertlength = sides
+  DIM AS DOUBLE theta
+  DIM verts(vertlength) AS tFZX_VECTOR2d
+  DIM AS LONG vertCount: vertCount = 0
+  DIM AS LONG odd
+
+  __fzxBody(index).shape.maxDimension.x = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
+  __fzxBody(index).shape.maxDimension.y = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
+
+  FOR theta = 0 TO 359 STEP (360 / sides)
+    odd = (vertCount MOD 2) * 20
+    fzxVector2DSet verts(vertCount), sizex * COS(_D2R(theta)), sizey * SIN(_D2R(theta))
+    vertCount = vertCount + 1
+  NEXT
+  fzxVertexSetTest index, verts()
 END SUB
 
 SUB fzxBodyCreate (index AS LONG, shape AS tFZX_SHAPE)
@@ -396,7 +430,7 @@ SUB fzxVertexSet (index AS LONG, verts() AS tFZX_VECTOR2d)
   DIM e2 AS tFZX_VECTOR2d
   DIM cross AS DOUBLE
   DO
-    hull(outCount) = indexHull
+    hull(outCount) = indexHull ' indexHull starts out as the right most vertex
     nextHullIndex = 0
     FOR i = 1 TO vertLength
       IF nextHullIndex = indexHull THEN
@@ -406,6 +440,7 @@ SUB fzxVertexSet (index AS LONG, verts() AS tFZX_VECTOR2d)
       fzxVector2DSubVectorND e1, verts(nextHullIndex), verts(hull(outCount))
       fzxVector2DSubVectorND e2, verts(i), verts(hull(outCount))
       cross = fzxVector2DCross(e1, e2)
+      ' checks for a concave area in the sides of a body
       IF cross < 0.0 OR (cross = 0.0 AND (fzxVector2DLengthSq(e2) > fzxVector2DLengthSq(e1))) THEN nextHullIndex = i
     NEXT
     outCount = outCount + 1
@@ -431,6 +466,36 @@ SUB fzxVertexSet (index AS LONG, verts() AS tFZX_VECTOR2d)
     fzxSetBodyNorm index, i, tempV
   NEXT
 END SUB
+
+' This an experimental. It does not correct any of the vertex issues. (Use at your own risk!)
+SUB fzxVertexSetTest (index AS LONG, verts() AS tFZX_VECTOR2d)
+
+  DIM AS LONG i, vertLength
+
+  vertLength = UBOUND(verts)
+
+  __fzxBody(index).pa.count = vertLength - 1
+
+  FOR i = 0 TO vertLength
+    fzxSetBodyVert index, i, verts(i)
+  NEXT
+  fzxSetBodyVert index, vertLength, verts(0)
+
+  ' set the normals for the poly
+  DIM AS tFZX_VECTOR2d face, vert1, vert2, tempV
+  FOR i = 0 TO vertLength
+    fzxGetBodyVert index, fzxArrayNextIndex(i, __fzxBody(index).pa.count), vert1
+    fzxGetBodyVert index, i, vert2
+    fzxVector2DSubVectorND face, vert1, vert2
+    fzxSetBodyNormXY index, i, face.y, -face.x
+    fzxGetBodyNorm index, i, tempV
+    fzxVector2DNormalize tempV
+    fzxSetBodyNorm index, i, tempV
+  NEXT
+
+END SUB
+
+
 
 SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
   DIM AS LONG iter
