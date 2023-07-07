@@ -16,9 +16,9 @@ OPTION _EXPLICIT
 '**********************************************************************************************
 '   Physics code ported from RandyGaul's Impulse Engine
 '   https://github.com/RandyGaul/ImpulseEngine
-'   http://RandyGaul.net
+'
 '**********************************************************************************************
-'    Copyright (c) 2013 Randy Gaul http://RandyGaul.net
+'    Copyright (c) 2013 Randy Gaul
 
 '    This software is provided 'as-is', without any express or implied
 '    warranty. In no event will the authors be held liable for any damages
