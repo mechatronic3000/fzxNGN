@@ -109,7 +109,7 @@ SUB buildScene
   fzxSetBody cFZX_PARAMETER_STATIC, temp, 0, 0
 
 
-  temp = fzxCreatePolyBodyTest("test", 80, 80, 3)
+  temp = fzxCreatePolyBodyEx("test", 80, 80, 3)
   fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxWorld.spawn.x, __fzxWorld.spawn.y - 200
   fzxSetBody cFZX_PARAMETER_STATIC, temp, 0, 0
 
