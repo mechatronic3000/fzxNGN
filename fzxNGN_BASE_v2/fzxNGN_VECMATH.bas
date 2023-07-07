@@ -251,7 +251,7 @@ $IF FZXVECMATHINCLUDE = UNDEFINED THEN
     fzxGetAngleVector2d = fzxGetAngle(p1.x, p1.y, p2.x, p2.y)
   END FUNCTION
 
-  ' Function written bu Galleon (modified for using radians)
+  ' Function written by Galleon (modified for using radians)
   FUNCTION fzxGetAngle# (x1 AS DOUBLE, y1 AS DOUBLE, x2 AS DOUBLE, y2 AS DOUBLE) 'returns 0-359.99...
     IF y2 = y1 THEN
       IF x1 = x2 THEN EXIT FUNCTION
