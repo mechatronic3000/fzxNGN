@@ -42,4 +42,8 @@ $IF FZXIMPULSEMATHINCLUDE = UNDEFINED THEN
     fzxImpulseGT = (a >= b * cFZX_BIAS_RELATIVE + a * cFZX_BIAS_ABSOLUTE)
   END FUNCTION
 
+  FUNCTION fzxImpulseWithin (v AS DOUBLE, low AS DOUBLE, high AS DOUBLE)
+    fzxImpulseWithin = (low <= v) AND (v <= high)
+  END FUNCTION
+
 $END IF
