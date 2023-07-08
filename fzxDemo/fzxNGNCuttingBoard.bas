@@ -6,12 +6,14 @@
 OPTION _EXPLICIT
 _TITLE "fzxNGN Cutting Board"
 
+
 ' Initialize FZXNGN types, globals and constants
 '$include:'..\fzxNGN_BASE_v2\fzxNGN_ini.bas'
 
 SCREEN _NEWIMAGE(1024, 768, 32)
+_PRINTMODE _KEEPBACKGROUND
 
-DIM AS LONG iterations: iterations = 100
+DIM AS LONG iterations: iterations = 200
 DIM SHARED AS DOUBLE dt: dt = 1 / 60
 
 
