@@ -35,6 +35,7 @@ $IF FZXPOLYGONINCLUDE = UNDEFINED THEN
     NEXT
   END SUB
 
+  ' Does Point P lie within triangle A,B,C
   FUNCTION fzxPointInTriangle (a AS tFZX_VECTOR2d, b AS tFZX_VECTOR2d, c AS tFZX_VECTOR2d, p AS tFZX_VECTOR2d)
     DIM AS DOUBLE det, factor_alpha, factor_beta, alpha, beta, gamma
     det = (b.y - c.y) * (a.x - c.x) + (c.x - b.x) * (a.y - c.y)
@@ -51,6 +52,39 @@ $IF FZXPOLYGONINCLUDE = UNDEFINED THEN
                          (fzxImpulseWithin(alpha, 0, 1) AND _
                           fzxImpulseWithin(beta, 0, 1) AND _
                           fzxImpulseWithin(gamma, 0, 1))
+  END FUNCTION
+
+  FUNCTION fzxAreaOfPolygon# (v() AS tFZX_VECTOR2d)
+    ' https://www.101computing.net/the-shoelace-algorithm/
+    ' The Shoelace Algorithm
+
+    ' The shoelace formula or shoelace algorithm is a mathematical
+    ' algorithm to determine the area of a simple polygon whose
+    ' vertices are described by their Cartesian coordinates in the plane.
+
+    ' The method consists of cross-multiplying corresponding coordinates
+    ' of the different vertices of a polygon to find its area.
+    ' It is called the shoelace formula because of the constant
+    ' cross-multiplying for the coordinates making up the polygon,
+    ' like tying shoelaces.
+    ' This algorithm has applications in 2D and 3D computer graphics
+    ' graphics, in surveying or in forestry, among other areas.
+
+    DIM AS LONG numberOfVertices: numberOfVertices = UBOUND(v)
+    DIM AS LONG i
+    ' Using float because numbers can grow very large
+    DIM AS _FLOAT sum1, sum2, area
+
+    FOR i = 0 TO numberOfVertices - 1
+      sum1 = sum1 + v(i).x * v(i + 1).y
+      sum2 = sum2 + v(i).y * v(i + 1).x
+    NEXT
+
+    sum1 = sum1 + v(numberOfVertices - 1).x * v(0).y
+    sum2 = sum2 + v(0).x * v(numberOfVertices - 1).y
+
+    area = ABS(sum1 - sum2) / 2
+    fzxAreaOfPolygon = area
   END FUNCTION
 
 $END IF
