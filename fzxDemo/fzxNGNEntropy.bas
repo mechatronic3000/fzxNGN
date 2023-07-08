@@ -202,7 +202,7 @@ SUB buildScene
   temp = temp + 1: LOOP
 
 
-  ballCount = 700
+  ballCount = 200
 
   ballArray "b", ballCount, 20, 5, __fzxWorld.spawn.x, __fzxWorld.spawn.y - 8500, 500
   temp = 0: DO WHILE temp < ballCount
