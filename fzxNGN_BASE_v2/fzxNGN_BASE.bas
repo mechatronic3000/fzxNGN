@@ -1522,7 +1522,7 @@ END SUB
 '**********************************************************************************************
 SUB _______________JOINT_CREATION_FUNCTIONS: END SUB
 FUNCTION fzxJointCreate (b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
-  IF b1 < 0 OR b1 > UBOUND(__fzxJoints) OR b2 < 0 OR b2 > UBOUND(__fzxJoints) THEN EXIT FUNCTION
+  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT FUNCTION
   DIM AS LONG iter, uB, uBTemp
   uB = -1
 
@@ -1554,7 +1554,7 @@ FUNCTION fzxJointCreate (b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
 END FUNCTION
 
 FUNCTION fzxJointCreateEx (b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anchor2 AS tFZX_VECTOR2d)
-  IF b1 < 0 OR b1 > UBOUND(__fzxJoints) OR b2 < 0 OR b2 > UBOUND(__fzxJoints) THEN EXIT FUNCTION
+  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT FUNCTION
   DIM AS LONG iter, uB, uBTemp
   uB = -1
   iter = 1: DO WHILE iter <= UBOUND(__fzxJoints)
