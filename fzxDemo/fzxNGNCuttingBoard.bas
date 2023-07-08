@@ -44,7 +44,8 @@ DO
   LOCATE 1: PRINT "Move the Knife to cut up the softbody."
   LOCATE 2: PRINT "Use UP and DOWN arrow keys to adjust the bias (stiffness) on Softbody."
   LOCATE 3: PRINT "Use LEFT and RIGHT arrow keys to adjust the Maxium bias (breaking point) on Softbody."
-  LOCATE 4: PRINT "Use 'r' or 'R' to reset the softbody."
+  LOCATE 4: PRINT "Use the mouse wheel to rotate knife."
+  LOCATE 5: PRINT "Use 'r' or 'R' to reset the softbody."
   LOCATE 2, 100: PRINT "Bias:"; bias
   LOCATE 3, 100: PRINT "MaxBias:"; maxBias
   fzxHandleInputDevice
