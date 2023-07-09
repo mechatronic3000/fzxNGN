@@ -45,6 +45,7 @@ SYSTEM
 SUB animatescene
   DIM AS LONG temp
   DIM AS DOUBLE angV
+  DIM AS tFZX_VECTOR2d xy, sxy
 
   ' Create a object on mouse click
   IF __fzxInputDevice.mouse.b1.NegEdge THEN
@@ -69,9 +70,42 @@ SUB animatescene
     ' Bodies wont live forever
     fzxSetBody cFZX_PARAMETER_LIFETIME, temp, RND * 20 + 60, 0
   END IF
-  temp = fzxBodyManagerID("first_gear")
+
+  temp = fzxBodyManagerID("first_gear") ' Find body named "first_gear"
+  fzxSetBody cFZX_PARAMETER_TORQUE, temp, 10, 0 ' Set the torque to 10. 10 what? You ask, its what ever you want. Units are arbitrary
+  angV = fzxGetBodyD(cFZX_PARAMETER_ANGULARVELOCITY, temp, 0) ' Get the velocity
+  fzxSetBody cFZX_PARAMETER_ANGULARVELOCITY, temp, fzxImpulseClamp(-1.5, 1.5, angV), 0 ' Clamp the velocity to 1.5. 1.5 what? You ask.
+
+  ' Find the center of the gear
+  fzxVector2DSet xy, fzxGetBodyD(cFZX_PARAMETER_POSITION, temp, cFZX_ARGUMENT_X), fzxGetBodyD(cFZX_PARAMETER_POSITION, temp, cFZX_ARGUMENT_Y)
+  ' Convert that to screen coordinates
+  fzxWorldToCameraEx xy, sxy
+  ' Print the Id
+  _PRINTSTRING (sxy.x - 30, sxy.y + 20), "1st gear"
+  ' Print out the velocity
+  LOCATE 3: PRINT USING "1st gear velocity:##.###  Drive gear."; angV
+
+  ' Find the name of the body
+  temp = fzxBodyManagerID("second_gear")
+  ' Get the velocity
   angV = fzxGetBodyD(cFZX_PARAMETER_ANGULARVELOCITY, temp, 0)
-  fzxSetBody cFZX_PARAMETER_ANGULARVELOCITY, temp, fzxImpulseClamp(-.1, .1, angV), 0
+  ' Find the center of the gear
+  fzxVector2DSet xy, fzxGetBodyD(cFZX_PARAMETER_POSITION, temp, cFZX_ARGUMENT_X), fzxGetBodyD(cFZX_PARAMETER_POSITION, temp, cFZX_ARGUMENT_Y)
+  ' Convert that to screen coordinates
+  fzxWorldToCameraEx xy, sxy
+  ' Print the Id
+  _PRINTSTRING (sxy.x - 30, sxy.y + 20), "2nd gear"
+  ' Print out the velocity
+  LOCATE 4: PRINT USING "2nd gear velocity:##.###"; angV
+
+  'Basically the same pattern for the third gear
+  temp = fzxBodyManagerID("third_gear")
+  angV = fzxGetBodyD(cFZX_PARAMETER_ANGULARVELOCITY, temp, 0)
+  fzxVector2DSet xy, fzxGetBodyD(cFZX_PARAMETER_POSITION, temp, cFZX_ARGUMENT_X), fzxGetBodyD(cFZX_PARAMETER_POSITION, temp, cFZX_ARGUMENT_Y)
+  fzxWorldToCameraEx xy, sxy
+  _PRINTSTRING (sxy.x - 30, sxy.y + 20), "3rd gear"
+  LOCATE 5: PRINT USING "3rd gear velocity:##.###"; angV
+
 END SUB
 
 '********************************************************
@@ -81,7 +115,7 @@ END SUB
 SUB buildScene
 
   'Initialize camera
-  __fzxCamera.zoom = 1
+  __fzxCamera.zoom = 2.5
   fzxCalculateFOV
 
   '********************************************************
@@ -106,44 +140,50 @@ SUB buildScene
   '   Build Level
   '********************************************************
 
-  createGear "first", __fzxWorld.spawn.x, __fzxWorld.spawn.y, 100, 30
-  createGear "second", __fzxWorld.spawn.x + 170, __fzxWorld.spawn.y, 50, 12
-  createGear "third", __fzxWorld.spawn.x, __fzxWorld.spawn.y - 170, 50, 12
+  createGear "first", __fzxWorld.spawn.x + 48, __fzxWorld.spawn.y - 83, 15, 4
+  createGear "second", __fzxWorld.spawn.x, __fzxWorld.spawn.y - 83, 25, 4
+  createGear "third", __fzxWorld.spawn.x, __fzxWorld.spawn.y, 50, 4
 
 END SUB
 
 
-SUB createGear (idgear AS STRING, xo AS DOUBLE, yo AS DOUBLE, dia AS DOUBLE, numOfTeeth AS LONG)
+SUB createGear (idgear AS STRING, xo AS DOUBLE, yo AS DOUBLE, dia AS DOUBLE, toothSize AS LONG)
   DIM AS LONG gear1, pivot1, temp, tempj
-  DIM AS DOUBLE theta, toothIncr, circum
+  DIM AS DOUBLE theta, toothIncr
   DIM AS STRING id
 
+  ' Pivot is the static part of the gear that keeps it planted
   pivot1 = fzxCreateCircleBodyEx(idgear + "_pivot", 5)
   fzxSetBody cFZX_PARAMETER_POSITION, pivot1, xo, yo
   fzxSetBody cFZX_PARAMETER_STATIC, pivot1, 0, 0
-  ' keeps the gear from colliding with the pivot
+  ' Collision mask keeps the gear from colliding with the pivot
   fzxSetBody cFZX_PARAMETER_COLLISIONMASK, pivot1, 0, 0
 
-
+  ' Build the actual gear wheel
   gear1 = fzxCreateCircleBodyEx(idgear + "_gear", dia)
   fzxSetBody cFZX_PARAMETER_POSITION, gear1, xo, yo
 
-
+  ' Connect the pivot and gearwheel together
   tempj = fzxJointCreate(pivot1, gear1, xo, yo)
   __fzxJoints(tempj).softness = .000002
   __fzxJoints(tempj).biasFactor = 4000
   '__fzxJoints(tempj).render = 1
 
-  toothIncr = 360 / numOfTeeth
-  circum = (_PI * dia) / numOfTeeth - 1
+  ' Calculate tooth spacing aroud the gear
+  toothIncr = 360 / (INT((_PI * dia) / toothSize))
 
   FOR theta = 0 TO 359 STEP toothIncr
+    ' Name the tooth
     id = idgear + "_tooth_" + _TRIM$(STR$(theta))
-    temp = fzxCreatePolyBodyEx(id, circum, circum, 3)
-    fzxSetBody cFZX_PARAMETER_POSITION, temp, xo + (dia + 5) * COS(_D2R(theta)), yo + (dia + 5) * SIN(_D2R(theta))
+    ' Create a triangle for a tooth
+    temp = fzxCreatePolyBodyEx(id, toothSize, toothSize, 3)
+    ' Plant the tooth around the perimeter
+    fzxSetBody cFZX_PARAMETER_POSITION, temp, xo + (dia + toothSize * .5) * COS(_D2R(theta)), yo + (dia + toothSize * .5) * SIN(_D2R(theta))
+    ' Adjust the angle of tooth so it points outward
     fzxSetBody cFZX_PARAMETER_ORIENT, temp, _D2R(theta), 0
+    ' Attach tooth to gear wheel
     tempj = fzxJointCreate(temp, gear1, xo + (dia - 5) * COS(_D2R(theta)), yo + (dia - 5) * SIN(_D2R(theta)))
-    __fzxJoints(tempj).softness = .0000002
+    __fzxJoints(tempj).softness = 0.0000002
     __fzxJoints(tempj).biasFactor = 4000
     ' __fzxJoints(tempj).render = 1
   NEXT
