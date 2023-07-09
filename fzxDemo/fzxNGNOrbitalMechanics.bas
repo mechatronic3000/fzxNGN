@@ -126,9 +126,6 @@ SUB buildScene
 
   temp = fzxCreateCircleBodyEx("planetX", 800)
   fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxWorld.spawn.x, __fzxWorld.spawn.y
-  fzxSetBody cFZX_PARAMETER_STATICFRICTION, temp, 0.9, 0
-  fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, temp, 0.7, 0
-  fzxSetBody cFZX_PARAMETER_RESTITUTION, temp, .10, 0
 
 END SUB
 
