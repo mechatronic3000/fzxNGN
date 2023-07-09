@@ -1293,7 +1293,7 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
 
   ' joint pre Steps
   i = 0: DO WHILE i <= uJ
-    fzxJointPrestep i, dt
+    IF __fzxJoints(i).overwrite = 0 THEN fzxJointPrestep i, dt
   i = i + 1: LOOP
 
   ' Solve collisions
@@ -1312,8 +1312,8 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
     i = i + 1: LOOP
 
 
-    i = 1: DO WHILE i <= uJ
-      fzxJointApplyImpulse i
+    i = 0: DO WHILE i <= uJ
+      IF __fzxJoints(i).overwrite = 0 THEN fzxJointApplyImpulse i
     i = i + 1: LOOP
 
     ' It appears that the joint bias is analgous to the stress the
@@ -1521,78 +1521,68 @@ END SUB
 '   Joint Creation
 '**********************************************************************************************
 SUB _______________JOINT_CREATION_FUNCTIONS: END SUB
-FUNCTION fzxJointCreate (b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
-  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT FUNCTION
+
+FUNCTION fzxJointAllocate
   DIM AS LONG iter, uB, uBTemp
+  ' Set uB to -1 to signal if the following code is unsuccessful at find
+  ' an available joint to overwrite then allocate more space
   uB = -1
 
-  iter = 1: DO WHILE iter <= UBOUND(__fzxJoints)
+  iter = 0: DO WHILE iter <= UBOUND(__fzxJoints)
     IF __fzxJoints(iter).overwrite = 1 THEN
-      __fzxJoints(iter).overwrite = 0
-      uB = iter
-      EXIT DO
+      fzxJointAllocate = iter
+      EXIT FUNCTION
     END IF
   iter = iter + 1: LOOP
 
+  ' If uB is still -1 then we need to allocate more array space
+  ' If uB >= 0 then it found an element to overwrite and returns this value.
   IF uB < 0 THEN
-    uBTemp = UBOUND(__fzxJoints)
-    REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) * 1.1) AS tFZX_JOINT
+    ' uBTemp should be the next element in the newly allocated array
+    uBTemp = UBOUND(__fzxJoints) + 1
+    ' Add 10 more elements to the __fzxJoints array, while preserving the contents
+    REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) + 10) AS tFZX_JOINT
+    ' uB is the size of the newly expanded array
     uB = UBOUND(__fzxJoints)
-    iter = uBTemp + 1: DO WHILE iter <= uB
+    ' Mark all of the newly created elements to be overwritten
+    iter = uBTemp: DO WHILE iter <= uB
       __fzxJoints(iter).overwrite = 1
     iter = iter + 1: LOOP
+    ' Set uB to then first element available in the newly expanded array.
+    uB = uBTemp
   END IF
+  fzxJointAllocate = uB
+END FUNCTION
 
+FUNCTION fzxJointCreate (b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
+  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT FUNCTION
+  DIM AS LONG tempJ: tempJ = fzxJointAllocate
 
-  fzxJointSet uB, b1, b2, x, y
+  fzxJointSet tempJ, b1, b2, x, y
   'Joint name will default to a combination of the two objects that is connects.
   'If you change it you must also recompute the hash.
-  __fzxJoints(uB).jointName = _TRIM$(__fzxBody(b1).objectName) + "_" + _TRIM$(__fzxBody(b2).objectName)
-  __fzxJoints(uB).jointHash = fzxComputeHash&&(__fzxJoints(uB).jointName)
-  __fzxJoints(uB).wireframe_color = _RGB32(255, 227, 127)
-  fzxJointCreate = uB
+  __fzxJoints(tempJ).jointName = _TRIM$(__fzxBody(b1).objectName) + "_" + _TRIM$(__fzxBody(b2).objectName)
+  __fzxJoints(tempJ).jointHash = fzxComputeHash&&(__fzxJoints(tempJ).jointName)
+  __fzxJoints(tempJ).wireframe_color = _RGB32(255, 227, 127)
+  fzxJointCreate = tempJ
 END FUNCTION
 
 FUNCTION fzxJointCreateEx (b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anchor2 AS tFZX_VECTOR2d)
   IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT FUNCTION
-  DIM AS LONG iter, uB, uBTemp
-  uB = -1
-  iter = 1: DO WHILE iter <= UBOUND(__fzxJoints)
-    IF __fzxJoints(iter).overwrite = 1 THEN
-      __fzxJoints(iter).overwrite = 0
-      uB = iter
-      EXIT DO
-    END IF
-  iter = iter + 1: LOOP
+  DIM AS LONG tempJ: tempJ = fzxJointAllocate
 
-  IF uB < 0 THEN
-    uBTemp = UBOUND(__fzxJoints)
-    REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) * 1.1) AS tFZX_JOINT
-    uB = UBOUND(__fzxJoints)
-    iter = uBTemp: DO WHILE iter <= uB
-      __fzxJoints(iter).overwrite = 1
-    iter = iter + 1: LOOP
-  END IF
-
-  fzxJointSetEx uB, b1, b2, anchor1, anchor2
+  fzxJointSetEx tempJ, b1, b2, anchor1, anchor2
   'Joint name will default to a combination of the two objects that is connects.
   'If you change it you must also recompute the hash.
-  __fzxJoints(uB).jointName = _TRIM$(__fzxBody(b1).objectName) + "_" + _TRIM$(__fzxBody(b2).objectName)
-  __fzxJoints(uB).jointHash = fzxComputeHash&&(__fzxJoints(uB).jointName)
-  __fzxJoints(uB).wireframe_color = _RGB32(255, 227, 127)
-  fzxJointCreateEx = uB
+  __fzxJoints(tempJ).jointName = _TRIM$(__fzxBody(b1).objectName) + "_" + _TRIM$(__fzxBody(b2).objectName)
+  __fzxJoints(tempJ).jointHash = fzxComputeHash&&(__fzxJoints(tempJ).jointName)
+  __fzxJoints(tempJ).wireframe_color = _RGB32(255, 227, 127)
+  fzxJointCreateEx = tempJ
 END FUNCTION
 
 
 SUB fzxJointDelete (d AS LONG)
-  'DIM AS LONG index
   IF d >= 0 AND d <= UBOUND(__fzxJoints) THEN
-    '  FOR index = d TO UBOUND(__fzxJoints) - 1
-    '    __fzxJoints(index) = __fzxJoints(index + 1)
-    '  NEXT
-    '  REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) - 1) AS tFZX_JOINT
-    'END IF
-
     __fzxJoints(d).overwrite = 1
     __fzxJoints(d).jointName = ""
     __fzxJoints(d).jointHash = 0
@@ -1600,7 +1590,7 @@ SUB fzxJointDelete (d AS LONG)
 END SUB
 
 SUB fzxJointSet (index AS LONG, b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
-  IF b1 < 0 OR b1 > UBOUND(__fzxJoints) OR b2 < 0 OR b2 > UBOUND(__fzxJoints) THEN EXIT SUB
+  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT SUB
   DIM anchor AS tFZX_VECTOR2d
   fzxVector2DSet anchor, x, y
   DIM Rot1 AS tFZX_MATRIX2D: Rot1 = __fzxBody(b1).shape.u
@@ -1621,13 +1611,13 @@ SUB fzxJointSet (index AS LONG, b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE
   fzxVector2DSet __fzxJoints(index).P, 0, 0
   ' Some default Settings
   __fzxJoints(index).softness = 0.001
-  __fzxJoints(index).biasFactor = 100
-  __fzxJoints(index).max_bias = 100000
+  __fzxJoints(index).biasFactor = 1000
+  __fzxJoints(index).max_bias = -1
   __fzxJoints(index).overwrite = 0
 END SUB
 
 SUB fzxJointSetEx (index AS LONG, b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anchor2 AS tFZX_VECTOR2d)
-  IF b1 < 0 OR b1 > UBOUND(__fzxJoints) OR b2 < 0 OR b2 > UBOUND(__fzxJoints) THEN EXIT SUB
+  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT SUB
   DIM Rot1 AS tFZX_MATRIX2D: Rot1 = __fzxBody(b1).shape.u
   DIM Rot2 AS tFZX_MATRIX2D: Rot2 = __fzxBody(b2).shape.u
   DIM Rot1T AS tFZX_MATRIX2D: fzxMatrix2x2Transpose Rot1, Rot1T
@@ -1645,9 +1635,9 @@ SUB fzxJointSetEx (index AS LONG, b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR
 
   fzxVector2DSet __fzxJoints(index).P, 0, 0
   ' Some default Settings
-  __fzxJoints(index).softness = 0.001
-  __fzxJoints(index).biasFactor = 100
-  __fzxJoints(index).max_bias = 100000
+  __fzxJoints(index).softness = 0.0001
+  __fzxJoints(index).biasFactor = 1000
+  __fzxJoints(index).max_bias = -1
   __fzxJoints(index).overwrite = 0
 END SUB
 
