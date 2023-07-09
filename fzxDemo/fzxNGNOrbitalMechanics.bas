@@ -11,8 +11,8 @@ _TITLE "fzxNGN Orbital Mechanics"
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM AS LONG iterations: iterations = 10
-DIM SHARED AS DOUBLE dt: dt = 1 / 60
+DIM AS LONG iterations: iterations = 1000
+DIM SHARED AS DOUBLE dt: dt = 1 / 120
 
 
 '**********************************************************************************************
