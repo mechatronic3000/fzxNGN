@@ -1,10 +1,10 @@
 '**********************************************************************************************
-'   fzxBareBones
+'   fzxMechanical
 '**********************************************************************************************
 
 '$DYNAMIC
 OPTION _EXPLICIT
-_TITLE "fzxNGN Bare Bones"
+_TITLE "fzxNGN Gears"
 
 ' Initialize FZXNGN types, globals and constants
 '$include:'..\fzxNGN_BASE_v2\fzxNGN_ini.bas'
@@ -44,7 +44,7 @@ SYSTEM
 
 SUB animatescene
   DIM AS LONG temp
-  DIM AS DOUBLE ang
+  DIM AS DOUBLE angV
 
   ' Create a object on mouse click
   IF __fzxInputDevice.mouse.b1.NegEdge THEN
@@ -70,8 +70,8 @@ SUB animatescene
     fzxSetBody cFZX_PARAMETER_LIFETIME, temp, RND * 20 + 60, 0
   END IF
   temp = fzxBodyManagerID("first_gear")
-  ang = fzxGetBodyD(cFZX_PARAMETER_ANGULARVELOCITY, temp, 0)
-  fzxSetBody cFZX_PARAMETER_ANGULARVELOCITY, temp, fzxImpulseClamp(0, .1, ang), 0
+  angV = fzxGetBodyD(cFZX_PARAMETER_ANGULARVELOCITY, temp, 0)
+  fzxSetBody cFZX_PARAMETER_ANGULARVELOCITY, temp, fzxImpulseClamp(-.1, .1, angV), 0
 END SUB
 
 '********************************************************
@@ -121,18 +121,17 @@ SUB createGear (idgear AS STRING, xo AS DOUBLE, yo AS DOUBLE, dia AS DOUBLE, num
   pivot1 = fzxCreateCircleBodyEx(idgear + "_pivot", 5)
   fzxSetBody cFZX_PARAMETER_POSITION, pivot1, xo, yo
   fzxSetBody cFZX_PARAMETER_STATIC, pivot1, 0, 0
-  fzxSetBody cFZX_PARAMETER_NOPHYSICS, pivot1, 1, 0
+  ' keeps the gear from colliding with the pivot
+  fzxSetBody cFZX_PARAMETER_COLLISIONMASK, pivot1, 0, 0
 
 
   gear1 = fzxCreateCircleBodyEx(idgear + "_gear", dia)
   fzxSetBody cFZX_PARAMETER_POSITION, gear1, xo, yo
-  fzxSetBody cFZX_PARAMETER_STATICFRICTION, gear1, 1, 0
-  fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, gear1, 1, 0
 
 
   tempj = fzxJointCreate(pivot1, gear1, xo, yo)
   __fzxJoints(tempj).softness = .000002
-  __fzxJoints(tempj).biasFactor = 3000
+  __fzxJoints(tempj).biasFactor = 4000
   '__fzxJoints(tempj).render = 1
 
   toothIncr = 360 / numOfTeeth
@@ -145,7 +144,7 @@ SUB createGear (idgear AS STRING, xo AS DOUBLE, yo AS DOUBLE, dia AS DOUBLE, num
     fzxSetBody cFZX_PARAMETER_ORIENT, temp, _D2R(theta), 0
     tempj = fzxJointCreate(temp, gear1, xo + (dia - 5) * COS(_D2R(theta)), yo + (dia - 5) * SIN(_D2R(theta)))
     __fzxJoints(tempj).softness = .0000002
-    __fzxJoints(tempj).biasFactor = 3000
+    __fzxJoints(tempj).biasFactor = 4000
     ' __fzxJoints(tempj).render = 1
   NEXT
 
