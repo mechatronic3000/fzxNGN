@@ -16,8 +16,8 @@ DIM SHARED AS DOUBLE dt: dt = 1 / 120
 
 TYPE tTRAIL
   xy AS tFZX_VECTOR2d
-  t AS LONG
-  d AS LONG
+  t AS SINGLE
+  c AS LONG
 END TYPE
 
 DIM SHARED trail(5000) AS tTRAIL
@@ -192,6 +192,7 @@ SUB renderBodies STATIC
   DIM AS LONG i, j, skipCount
   DIM AS tFZX_VECTOR2d tempV
   DIM AS LONG ub: ub = UBOUND(__fzxBody)
+  DIM AS SINGLE time, fade
 
   'Draw all of the bodies that are visible
   i = 0: DO WHILE i <= ub
@@ -207,8 +208,9 @@ SUB renderBodies STATIC
         ' add a trail to the buffer
         j = 0: DO WHILE j <= UBOUND(trail)
           IF trail(j).t = 0 THEN
-            trail(j).t = TIMER(.001) + 5
+            trail(j).t = TIMER + 5
             trail(j).xy = __fzxBody(i).fzx.position
+            trail(j).c = _RGB32(205, 194, 50)
             EXIT DO
           END IF
         j = j + 1: LOOP
@@ -218,9 +220,12 @@ SUB renderBodies STATIC
       j = 0: DO WHILE j <= UBOUND(trail)
         IF trail(j).t > 0 THEN
           fzxWorldToCameraEx trail(j).xy, tempV
-          PSET (tempV.x, tempV.y), _RGB32(205, 194, 50)
+          PSET (tempV.x, tempV.y), trail(j).c
+          time = TIMER
+          fade = fzxImpulseClamp(0, 1, (trail(j).t - time) / 3.00)
+          trail(j).c = _RGB32(INT(_RED(trail(j).c) * fade), INT(_GREEN(trail(j).c) * fade), INT(_BLUE(trail(j).c) * fade))
           ' Eliminate expired trail dots
-          IF TIMER(.001) > trail(j).t THEN trail(j).t = 0
+          IF TIMER > trail(j).t THEN trail(j).t = 0
         END IF
       j = j + 1: LOOP
 
