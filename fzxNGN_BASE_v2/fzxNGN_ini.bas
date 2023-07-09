@@ -61,9 +61,9 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
   END TYPE
 
   TYPE tFZX_ELAPSEDTIMER
-    start AS _FLOAT
-    last AS _FLOAT
-    duration AS _FLOAT
+    start AS SINGLE
+    last AS SINGLE
+    duration AS SINGLE
   END TYPE
 
   TYPE tFZX_FSM
@@ -113,7 +113,7 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
   END TYPE
 
   TYPE tFZX_MOUSESETTINGS
-    doubleclickdelay AS DOUBLE
+    doubleclickdelay AS SINGLE
   END TYPE
 
   TYPE tFZX_KEYBOARD
@@ -190,7 +190,6 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
     staticFriction AS DOUBLE
     dynamicFriction AS DOUBLE
     restitution AS DOUBLE
-
   END TYPE
 
   TYPE tFZX_SPECIALFUNCTION
