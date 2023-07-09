@@ -1,7 +1,7 @@
 '**********************************************************************************************
 '   fzxMechanical
 '**********************************************************************************************
-
+$LET CIRCLEVISUAL = FALSE
 '$DYNAMIC
 OPTION _EXPLICIT
 _TITLE "fzxNGN Gears"
@@ -217,12 +217,15 @@ SUB renderBodies STATIC
 END SUB
 
 SUB renderWireFrameCircle (index AS LONG, c AS LONG)
-  DIM AS tFZX_VECTOR2d o1, o2
+  DIM AS tFZX_VECTOR2d o1
   fzxWorldToCameraEx __fzxBody(index).fzx.position, o1
   CIRCLE (o1.x, o1.y), __fzxBody(index).shape.radius * __fzxCamera.zoom, c
-  o2.x = o1.x + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * COS(__fzxBody(index).fzx.orient)
-  o2.y = o1.y + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * SIN(__fzxBody(index).fzx.orient)
-  LINE (o1.x, o1.y)-(o2.x, o2.y), c
+  $IF CIRCLEVISUAL = TRUE THEN
+    DIM AS tFZX_VECTOR2d o2
+    o2.x = o1.x + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * COS(__fzxBody(index).fzx.orient)
+    o2.y = o1.y + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * SIN(__fzxBody(index).fzx.orient)
+    LINE (o1.x, o1.y)-(o2.x, o2.y), c
+  $END IF
 END SUB
 
 SUB renderWireFramePoly (index AS LONG) STATIC
