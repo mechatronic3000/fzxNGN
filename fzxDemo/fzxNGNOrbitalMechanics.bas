@@ -14,6 +14,13 @@ SCREEN _NEWIMAGE(1024, 768, 32)
 DIM AS LONG iterations: iterations = 1000
 DIM SHARED AS DOUBLE dt: dt = 1 / 120
 
+TYPE tTRAIL
+  xy AS tFZX_VECTOR2d
+  t AS LONG
+  d AS LONG
+END TYPE
+
+DIM SHARED trail(5000) AS tTRAIL
 
 '**********************************************************************************************
 ' Build the playfield
@@ -182,12 +189,12 @@ FUNCTION areaToRadius# (area AS DOUBLE)
 END FUNCTION
 
 SUB renderBodies STATIC
-  DIM AS LONG i
-
+  DIM AS LONG i, j, skipCount
+  DIM AS tFZX_VECTOR2d tempV
   DIM AS LONG ub: ub = UBOUND(__fzxBody)
 
   'Draw all of the bodies that are visible
-  i = 0: DO WHILE i < ub
+  i = 0: DO WHILE i <= ub
     IF __fzxBody(i).enable AND __fzxBody(i).objectHash <> 0 THEN
       IF __fzxBody(i).shape.ty = cFZX_SHAPE_CIRCLE THEN
         renderWireFrameCircle i, _RGB32(0, 255, 0)
@@ -195,9 +202,34 @@ SUB renderBodies STATIC
           renderWireFramePoly i
         END IF
       END IF
+      'Draw trails
+      IF skipCount MOD 10 = 0 THEN ' dont add trails every cycle
+        ' add a trail to the buffer
+        j = 0: DO WHILE j <= UBOUND(trail)
+          IF trail(j).t = 0 THEN
+            trail(j).t = TIMER(.001) + 5
+            trail(j).xy = __fzxBody(i).fzx.position
+            EXIT DO
+          END IF
+        j = j + 1: LOOP
+
+      END IF
+      ' Draw trail dots
+      j = 0: DO WHILE j <= UBOUND(trail)
+        IF trail(j).t > 0 THEN
+          fzxWorldToCameraEx trail(j).xy, tempV
+          PSET (tempV.x, tempV.y), _RGB32(205, 194, 50)
+          ' Eliminate expired trail dots
+          IF TIMER(.001) > trail(j).t THEN trail(j).t = 0
+        END IF
+      j = j + 1: LOOP
+
     END IF
+
+
     i = i + 1
   LOOP
+  skipCount = skipCount + 1
 END SUB
 
 
