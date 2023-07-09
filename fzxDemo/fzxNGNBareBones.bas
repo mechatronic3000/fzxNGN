@@ -63,10 +63,10 @@ SUB animatescene
     ' Set the bouncyness
     fzxSetBody cFZX_PARAMETER_RESTITUTION, temp, .5, 0 ' Bounce
     ' Set the friction values of the body
-    fzxSetBody cFZX_PARAMETER_STATICFRICTION, temp, .1, 0
-    fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, temp, .85, 0
+    fzxSetBody cFZX_PARAMETER_STATICFRICTION, temp, .9, 0
+    fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, temp, .25, 0
     ' Bodies wont live forever
-    fzxSetBody cFZX_PARAMETER_LIFETIME, temp, RND * 20 + 60, 0
+    fzxSetBody cFZX_PARAMETER_LIFETIME, temp, RND * 20 + 10, 0
   END IF
 
 END SUB
@@ -106,11 +106,6 @@ SUB buildScene
 
   temp = fzxCreateBoxBodyEx("floor", 800, 10)
   fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxWorld.spawn.x, __fzxWorld.spawn.y
-  fzxSetBody cFZX_PARAMETER_STATIC, temp, 0, 0
-
-
-  temp = fzxCreatePolyBodyEx("test", 80, 80, 3)
-  fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxWorld.spawn.x, __fzxWorld.spawn.y - 200
   fzxSetBody cFZX_PARAMETER_STATIC, temp, 0, 0
 
 
