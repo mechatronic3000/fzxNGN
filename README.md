@@ -7,3 +7,5 @@ This was in part a test of a game mechanic I was kicking around for a driving/pl
 
 The "fzxNGNBareBones.bas" is what it says a bare minimum implementation of the physics engine.
 
+There are increasing number of demos, most do not require assets. Enjoy!
+
