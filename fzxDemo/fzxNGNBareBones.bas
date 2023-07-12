@@ -25,10 +25,11 @@ buildScene
 '**********************************************************************************************
 
 DO
-  CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
+
   fzxHandleInputDevice
   animatescene
   fzxImpulseStep dt, iterations
+  CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
   renderBodies
   _DISPLAY
 LOOP UNTIL INKEY$ = CHR$(27)
