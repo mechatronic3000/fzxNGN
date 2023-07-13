@@ -495,7 +495,12 @@ SUB fzxVertexSetTest (index AS LONG, verts() AS tFZX_VECTOR2d)
 
 END SUB
 
-
+SUB fzxBodyClear
+  DIM AS LONG iter
+  iter = 0: DO WHILE iter <= UBOUND(__fzxBody)
+    fzxBodyDelete iter, 0
+  iter = iter + 1: LOOP
+END SUB
 
 SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
   DIM AS LONG iter
@@ -1232,43 +1237,44 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
     A = __fzxBody(i)
     IF A.enable THEN
       j = i + 1: DO WHILE j < uB
-        IF i <> j THEN
-          B = __fzxBody(j)
-          IF B.enable THEN
-            IF (A.collisionMask AND B.collisionMask) THEN
-              IF NOT (A.fzx.invMass = 0.0 AND B.fzx.invMass = 0.0) THEN
-                'Mainfold solve - handle collisions
-                IF fzxAABBOverlapObjects(i, j) THEN
-                  IF A.shape.ty = cFZX_SHAPE_CIRCLE AND B.shape.ty = cFZX_SHAPE_CIRCLE THEN
-                    fzxCollisionCCHandle m, contacts(), i, j
+        B = __fzxBody(j)
+        ' B enabled ?
+        IF B.enable THEN
+          ' Can they Collide?
+          IF (A.collisionMask AND B.collisionMask) THEN
+            ' Static Objects ?
+            IF NOT (A.fzx.invMass = 0.0 AND B.fzx.invMass = 0.0) THEN
+              'Mainfold solve - handle collisions
+              IF fzxAABBOverlapObjects(i, j) THEN
+                IF A.shape.ty = cFZX_SHAPE_CIRCLE AND B.shape.ty = cFZX_SHAPE_CIRCLE THEN
+                  fzxCollisionCCHandle m, contacts(), i, j
+                ELSE
+                  IF A.shape.ty = cFZX_SHAPE_POLYGON AND B.shape.ty = cFZX_SHAPE_POLYGON THEN
+                    fzxCollisionPPHandle m, contacts(), i, j
                   ELSE
-                    IF A.shape.ty = cFZX_SHAPE_POLYGON AND B.shape.ty = cFZX_SHAPE_POLYGON THEN
-                      fzxCollisionPPHandle m, contacts(), i, j
+                    IF A.shape.ty = cFZX_SHAPE_CIRCLE AND B.shape.ty = cFZX_SHAPE_POLYGON THEN
+                      fzxCollisionCPHandle m, contacts(), i, j
                     ELSE
-                      IF A.shape.ty = cFZX_SHAPE_CIRCLE AND B.shape.ty = cFZX_SHAPE_POLYGON THEN
-                        fzxCollisionCPHandle m, contacts(), i, j
-                      ELSE
-                        IF B.shape.ty = cFZX_SHAPE_CIRCLE AND A.shape.ty = cFZX_SHAPE_POLYGON THEN
-                          fzxCollisionPCHandle m, contacts(), i, j
-                        END IF
+                      IF B.shape.ty = cFZX_SHAPE_CIRCLE AND A.shape.ty = cFZX_SHAPE_POLYGON THEN
+                        fzxCollisionPCHandle m, contacts(), i, j
                       END IF
                     END IF
                   END IF
-                  IF m.contactCount > 0 THEN
-                    m.A = i
-                    m.B = j
-                    manifolds(manifoldCount) = m
-                    k = 0: DO WHILE k <= m.contactCount
-                      __fzxHits(hitCount).A = i
-                      __fzxHits(hitCount).B = j
-                      __fzxHits(hitCount).position = contacts(k)
-                      collisions(manifoldCount, k) = contacts(k)
-                      hitCount = hitCount + 1
-                      IF hitCount > UBOUND(__fzxHits) THEN REDIM _PRESERVE __fzxHits(hitCount * 1.5) AS tFZX_HIT
-                    k = k + 1: LOOP
-                    manifoldCount = manifoldCount + 1
-                    IF manifoldCount > UBOUND(manifolds) THEN REDIM _PRESERVE manifolds(manifoldCount * 1.5) AS tFZX_MANIFOLD
-                  END IF
+                END IF
+                IF m.contactCount > 0 THEN
+                  m.A = i
+                  m.B = j
+                  manifolds(manifoldCount) = m
+                  k = 0: DO WHILE k <= m.contactCount
+                    __fzxHits(hitCount).A = i
+                    __fzxHits(hitCount).B = j
+                    __fzxHits(hitCount).position = contacts(k)
+                    collisions(manifoldCount, k) = contacts(k)
+                    hitCount = hitCount + 1
+                    IF hitCount > UBOUND(__fzxHits) THEN REDIM _PRESERVE __fzxHits(hitCount * 1.5) AS tFZX_HIT
+                  k = k + 1: LOOP
+                  manifoldCount = manifoldCount + 1
+                  IF manifoldCount > UBOUND(manifolds) THEN REDIM _PRESERVE manifolds(manifoldCount * 1.5) AS tFZX_MANIFOLD
                 END IF
               END IF
             END IF
@@ -1580,6 +1586,12 @@ FUNCTION fzxJointCreateEx (b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anc
   fzxJointCreateEx = tempJ
 END FUNCTION
 
+SUB fzxJointClear
+  DIM AS LONG iter
+  iter = 0: DO WHILE iter <= UBOUND(__fzxJoints)
+    fzxJointDelete iter
+  iter = iter + 1: LOOP
+END SUB
 
 SUB fzxJointDelete (d AS LONG)
   IF d >= 0 AND d <= UBOUND(__fzxJoints) THEN
