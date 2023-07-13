@@ -12,6 +12,7 @@ _TITLE "fzxNGN Bare Bones with Menu"
 CONST cFSM_GAMEMODE_IDLE = 0
 CONST cFSM_GAMEMODE_SPLASH_DRAW = 1
 CONST cFSM_GAMEMODE_SPLASH_DONE = 2
+CONST cFSM_GAMEMODE_MAIN_MENU_DRAW = 3
 CONST cFSM_GAMEMODE_MAIN_MENU_LOOP = 4
 CONST cFSM_GAMEMODE_MAIN_OPTIONS_LOOP = 6
 CONST cFSM_GAMEMODE_GAMEPLAY_INITIALIZE = 7
@@ -44,10 +45,13 @@ DO
       CLS
       LOCATE 20, 50: PRINT "BARE BONES with Menu"
       mainMenu.timerState.duration = 3
-      buildSplash
       fzxFSMChangeState mainMenu, cFSM_GAMEMODE_SPLASH_DONE
     CASE cFSM_GAMEMODE_SPLASH_DONE
-      fzxFSMChangeStateOnTimer mainMenu, cFSM_GAMEMODE_MAIN_MENU_LOOP
+      fzxFSMChangeStateOnTimer mainMenu, cFSM_GAMEMODE_MAIN_MENU_DRAW
+    CASE cFSM_GAMEMODE_MAIN_MENU_DRAW
+      clearScene
+      buildSplash
+      fzxFSMChangeState mainMenu, cFSM_GAMEMODE_MAIN_MENU_LOOP
     CASE cFSM_GAMEMODE_MAIN_MENU_LOOP
       CLS
       LOCATE 20, 100: PRINT "   BARE BONES"
@@ -130,7 +134,7 @@ DO
       CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
       renderBodies
       IF __fzxInputDevice.keyboard.keyHit = 27 THEN
-        fzxFSMChangeState mainMenu, cFSM_GAMEMODE_MAIN_MENU_LOOP
+        fzxFSMChangeState mainMenu, cFSM_GAMEMODE_MAIN_MENU_DRAW
       END IF
   END SELECT
   _DISPLAY
@@ -236,12 +240,9 @@ SUB renderBodies STATIC
 END SUB
 
 SUB renderWireFrameCircle (index AS LONG, c AS LONG)
-  DIM AS tFZX_VECTOR2d o1, o2
+  DIM AS tFZX_VECTOR2d o1
   fzxWorldToCameraEx __fzxBody(index).fzx.position, o1
   CIRCLE (o1.x, o1.y), __fzxBody(index).shape.radius * __fzxCamera.zoom, c
-  'o2.x = o1.x + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * COS(__fzxBody(index).fzx.orient)
-  'o2.y = o1.y + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * SIN(__fzxBody(index).fzx.orient)
-  'LINE (o1.x, o1.y)-(o2.x, o2.y), c
 END SUB
 
 SUB renderWireFramePoly (index AS LONG) STATIC
@@ -259,8 +260,6 @@ SUB renderWireFramePoly (index AS LONG) STATIC
 END SUB
 
 SUB buildSplash
-  DIM AS LONG temp
-
   'Initialize camera
   __fzxCamera.zoom = 1
   fzxCalculateFOV
@@ -275,7 +274,7 @@ SUB buildSplash
   fzxVector2DSet __fzxWorld.gravity, 0.0, 100.0
 
   ' Set camera position
-  fzxVector2DSet __fzxCamera.position, __fzxWorld.spawn.x, __fzxWorld.spawn.y - 300
+  fzxVector2DSet __fzxCamera.position, __fzxWorld.spawn.x + 125, __fzxWorld.spawn.y - 300
 
   ' Some math used on the impulse side
   ' Todo: move this elsewhere
