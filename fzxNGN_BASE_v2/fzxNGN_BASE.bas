@@ -514,7 +514,7 @@ SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
       IF __fzxJoints(iter).body1 = index OR __fzxJoints(iter).body2 = index THEN
         fzxJointDelete iter
       END IF
-    iter = iter + 1: LOOP WHILE iter < UBOUND(__fzxJoints)
+    iter = iter + 1: LOOP WHILE iter <= UBOUND(__fzxJoints)
 
     IF NOT perm THEN
       __fzxBody(index).enable = 0
@@ -532,7 +532,7 @@ SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
       iter = 0: DO
         IF __fzxJoints(iter).body1 >= index THEN __fzxJoints(iter).body1 = __fzxJoints(iter).body1 - 1
         IF __fzxJoints(iter).body2 >= index THEN __fzxJoints(iter).body2 = __fzxJoints(iter).body2 - 1
-      iter = iter + 1: LOOP WHILE iter < UBOUND(__fzxJoints)
+      iter = iter + 1: LOOP WHILE iter <= UBOUND(__fzxJoints)
     END IF
   END IF
 END SUB
@@ -1846,7 +1846,7 @@ END FUNCTION
 FUNCTION fzxBodyWithHash (hash AS _INTEGER64)
   DIM AS LONG i
   fzxBodyWithHash = -1
-  FOR i = 0 TO UBOUND(__fzxBody) - 1
+  FOR i = 0 TO UBOUND(__fzxBody)
     IF __fzxBody(i).objectHash = hash THEN
       fzxBodyWithHash = i
       EXIT FUNCTION
@@ -1857,7 +1857,7 @@ END FUNCTION
 FUNCTION fzxBodyWithHashMask (hash AS _INTEGER64, mask AS LONG)
   DIM AS LONG i
   fzxBodyWithHashMask = -1
-  FOR i = 0 TO UBOUND(__fzxBody) - 1
+  FOR i = 0 TO UBOUND(__fzxBody)
     IF (__fzxBody(i).objectHash AND mask) = (hash AND mask) THEN
       fzxBodyWithHashMask = i
       EXIT FUNCTION
@@ -1868,10 +1868,10 @@ END FUNCTION
 FUNCTION fzxBodyManagerID (objName AS STRING)
   DIM i AS LONG
   DIM uID AS _INTEGER64
-  uID = fzxComputeHash(RTRIM$(LTRIM$(objName)))
+  uID = fzxComputeHash(_TRIM$(objName))
   fzxBodyManagerID = -1
 
-  FOR i = 0 TO UBOUND(__fzxBody) - 1
+  FOR i = 0 TO UBOUND(__fzxBody)
     IF __fzxBody(i).objectHash = uID THEN
       fzxBodyManagerID = i
       EXIT FUNCTION
@@ -1882,7 +1882,7 @@ END FUNCTION
 FUNCTION fzxBodyContainsString (start AS LONG, s AS STRING)
   fzxBodyContainsString = -1
   DIM AS LONG j
-  FOR j = start TO UBOUND(__fzxBody) - 1
+  FOR j = start TO UBOUND(__fzxBody)
     IF INSTR(__fzxBody(j).objectName, s) THEN
       fzxBodyContainsString = j
       EXIT FUNCTION
