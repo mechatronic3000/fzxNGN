@@ -11,8 +11,8 @@ _TITLE "fzxNGN Orbital Mechanics"
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM SHARED AS LONG iterations: iterations = 1000
-DIM SHARED AS DOUBLE dt: dt = 1 / 120
+__fzxWorld.deltaTime = 1 / 120
+__fzxWorld.iterations = 1000
 
 TYPE tTRAIL
   xy AS tFZX_VECTOR2d
@@ -50,7 +50,7 @@ DO
   fzxHandleInputDevice
   animatescene
   IF NOT pause THEN
-    fzxImpulseStep dt, iterations
+    fzxImpulseStep
   END IF
   renderBodies
   _DISPLAY
@@ -122,35 +122,36 @@ SUB animatescene
     pause = NOT pause
   END IF
 
-  IF pause THEN
-    ub = UBOUND(__fzxBody)
-    REDIM b(ub) AS tTEMPBODY
-    bix = 0: DO WHILE bix <= ub
-      b(bix).en = __fzxBody(bix).enable AND __fzxBody(bix).objectHash <> 0
-      b(bix).xy = __fzxBody(bix).fzx.position
-      b(bix).vel = __fzxBody(bix).fzx.velocity
-      b(bix).mass = __fzxBody(bix).fzx.mass
-    bix = bix + 1: LOOP
+  'Not working correctly
+  'IF pause THEN
+  '  ub = UBOUND(__fzxBody)
+  '  REDIM b(ub) AS tTEMPBODY
+  '  bix = 0: DO WHILE bix <= ub
+  '    b(bix).en = __fzxBody(bix).enable AND __fzxBody(bix).objectHash <> 0
+  '    b(bix).xy = __fzxBody(bix).fzx.position
+  '    b(bix).vel = __fzxBody(bix).fzx.velocity
+  '    b(bix).mass = __fzxBody(bix).fzx.mass
+  '  bix = bix + 1: LOOP
 
-    iter = 0: DO WHILE iter < 2000
-      i = 0: DO WHILE i <= ub
-        IF b(i).en THEN
-          j = 0: DO WHILE j <= ub
-            IF b(j).en AND i <> j THEN
-              dist = fzxVector2DDistance(b(i).xy, b(j).xy)
-              gv = gravity(b(i).mass, b(j).mass, dist)
-              fzxVector2DSubVectorND gravVec, b(i).xy, b(j).xy
-              fzxVector2DNormalize gravVec
-              fzxVector2DMultiplyScalar gravVec, -gv
-              integrateGravity b(i), gravVec
-            END IF
-          j = j + 1: LOOP
-          fzxWorldToCameraEx b(i).xy, v2
-          PSET (v2.x, v2.y), _RGB32(244, 0, 127)
-        END IF
-      i = i + 1: LOOP
-    iter = iter + 1: LOOP
-  END IF
+  '  iter = 0: DO WHILE iter < 2000
+  '    i = 0: DO WHILE i <= ub
+  '      IF b(i).en THEN
+  '        j = 0: DO WHILE j <= ub
+  '          IF b(j).en AND i <> j THEN
+  '            dist = fzxVector2DDistance(b(i).xy, b(j).xy)
+  '            gv = gravity(b(i).mass, b(j).mass, dist)
+  '            fzxVector2DSubVectorND gravVec, b(i).xy, b(j).xy
+  '            fzxVector2DNormalize gravVec
+  '            fzxVector2DMultiplyScalar gravVec, -gv
+  '            integrateGravity b(i), gravVec
+  '          END IF
+  '        j = j + 1: LOOP
+  '        fzxWorldToCameraEx b(i).xy, v2
+  '        PSET (v2.x, v2.y), _RGB32(244, 0, 127)
+  '      END IF
+  '    i = i + 1: LOOP
+  '  iter = iter + 1: LOOP
+  'END IF
 END SUB
 
 '********************************************************
@@ -191,8 +192,8 @@ END FUNCTION
 
 SUB integrateGravity (b AS tTEMPBODY, gv AS tFZX_VECTOR2d)
   DIM dts AS DOUBLE
-  dts = dt * .5
-  fzxVector2DAddVectorScalar b.xy, b.vel, dt
+  dts = __fzxWorld.deltaTime * .5
+  fzxVector2DAddVectorScalar b.xy, b.vel, __fzxWorld.deltaTime
   fzxVector2DAddVectorScalar b.vel, gv, (1 / b.mass) * dts
 END SUB
 

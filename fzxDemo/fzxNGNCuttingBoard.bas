@@ -13,9 +13,7 @@ _TITLE "fzxNGN Cutting Board"
 SCREEN _NEWIMAGE(1024, 768, 32)
 _PRINTMODE _KEEPBACKGROUND
 
-DIM AS LONG iterations: iterations = 200
-DIM SHARED AS DOUBLE dt: dt = 1 / 60
-
+__fzxWorld.iterations = 200
 
 DIM SHARED AS LONG softbodyX, softbodyY
 DIM SHARED AS LONG nodeSize, nodeCB, nodeXB, nodeYB, nodeXYB
@@ -52,7 +50,7 @@ DO
   LOCATE 3, 100: PRINT "MaxBias:"; maxBias
   fzxHandleInputDevice
   animatescene
-  fzxImpulseStep dt, iterations
+  fzxImpulseStep
   renderBodies
   _DISPLAY
 LOOP UNTIL INKEY$ = CHR$(27)
@@ -120,7 +118,7 @@ SUB buildScene
   fzxVector2DSet __fzxWorld.spawn, 10000, 10000
   fzxVector2DSet __fzxWorld.gravity, 0.0, 1000.0
   DIM o AS tFZX_VECTOR2d
-  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
+  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, __fzxWorld.deltaTime
   __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
 
   ' Set camera position

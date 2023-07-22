@@ -35,15 +35,17 @@ SCREEN _NEWIMAGE(1024, 768, 32)
 fzxInitFPS
 fzxFSMChangeState glMode, cFSM_GLMODE_IDLE
 
-DIM AS LONG iterations: iterations = 2
-DIM SHARED AS DOUBLE dt: dt = 1 / 60
+'DIM AS LONG iterations: iterations = 2
+'DIM SHARED AS DOUBLE dt: dt = 1 / 60
+
+__fzxWorld.iterations = 2
 
 '**********************************************************************************************
 ' This is the main loop (Fast Loop)
 '**********************************************************************************************
 DO
   IF glMode.currentState = cFSM_GLMODE_RUN THEN animateScene game
-  fzxImpulseStep dt, iterations
+  fzxImpulseStep
   fzxHandleInputDevice
 LOOP UNTIL INKEY$ = CHR$(27)
 
@@ -146,7 +148,7 @@ SUB buildScene (game AS tGAME)
   fzxVector2DSet __fzxWorld.terrainPosition, -7000.0, 1000.0
 
   DIM o AS tFZX_VECTOR2d
-  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
+  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, __fzxWorld.deltaTime
   __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
 
   '********************************************************

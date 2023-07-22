@@ -2,8 +2,6 @@
 '   fzxBareBones
 '**********************************************************************************************
 
-'$DYNAMIC
-OPTION _EXPLICIT
 _TITLE "fzxNGN Bare Bones"
 
 ' Initialize FZXNGN types, globals and constants
@@ -11,7 +9,7 @@ _TITLE "fzxNGN Bare Bones"
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM AS LONG iterations: iterations = 100
+DIM SHARED AS LONG iterations: iterations = 100
 DIM SHARED AS DOUBLE dt: dt = 1 / 60
 
 '**********************************************************************************************
@@ -30,7 +28,9 @@ DO
   animatescene
   fzxImpulseStep dt, iterations
   CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
+  LOCATE 2: PRINT "Throw objects by moving the mouse and releasing the left mose button"
   renderBodies
+  _LIMIT 60
   _DISPLAY
 LOOP UNTIL INKEY$ = CHR$(27)
 
@@ -50,24 +50,27 @@ SUB animatescene
   IF __fzxInputDevice.mouse.b1.NegEdge THEN
     ' Drop a ball or a box, flip a coin
     IF RND > .5 THEN
-      temp = fzxCreateCircleBodyEx("b" + _TRIM$(STR$(RND * 1000000000)), 10)
+      temp = fzxCreateCircleBodyEx("b" + _TRIM$(STR$(RND * 1000000000)), 10 + RND * 10)
     ELSE
-      temp = fzxCreatePolyBodyEx("b" + _TRIM$(STR$(RND * 1000000000)), 10, 10, 3 + INT(RND * 5))
+      temp = fzxCreatePolyBodyEx("b" + _TRIM$(STR$(RND * 1000000000)), 10 + RND * 10, 10 + RND * 10, 3 + INT(RND * 5))
     END IF
     ' Set the bodies parameters
     ' Put the body where the mouse is on the screen
     fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxInputDevice.mouse.worldPosition.x, __fzxInputDevice.mouse.worldPosition.y
     ' Give it the mouse's velocity, so you can throw it
-    fzxSetBody cFZX_PARAMETER_VELOCITY, temp, __fzxInputDevice.mouse.velocity.x, __fzxInputDevice.mouse.velocity.y
+    fzxSetBody cFZX_PARAMETER_VELOCITY, temp, __fzxInputDevice.mouse.velocity.x * 10, __fzxInputDevice.mouse.velocity.y * 10
     ' Change its orientation or angle
     fzxSetBody cFZX_PARAMETER_ORIENT, temp, _D2R(RND * 360), 0
     ' Set the bouncyness
-    fzxSetBody cFZX_PARAMETER_RESTITUTION, temp, .5, 0 ' Bounce
+    fzxSetBody cFZX_PARAMETER_RESTITUTION, temp, .8, 0 ' Bounce
     ' Set the friction values of the body
     fzxSetBody cFZX_PARAMETER_STATICFRICTION, temp, .9, 0
     fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, temp, .25, 0
     ' Bodies wont live forever
     fzxSetBody cFZX_PARAMETER_LIFETIME, temp, RND * 20 + 10, 0
+    ' Set the color
+    fzxSetBody cFZX_PARAMETER_COLOR, temp, _RGB32(RND * 200, RND * 200, RND * 200), 0
+
   END IF
 
 END SUB
@@ -86,20 +89,18 @@ SUB buildScene
   '********************************************************
   '   Setup World
   '********************************************************
-
-  fzxVector2DSet __fzxWorld.minusLimit, -200000, -200000
-  fzxVector2DSet __fzxWorld.plusLimit, 200000, 200000
-  fzxVector2DSet __fzxWorld.spawn, 0, 0
-  fzxVector2DSet __fzxWorld.gravity, 0.0, 10.0
-
-  ' Set camera position
-  fzxVector2DSet __fzxCamera.position, __fzxWorld.spawn.x, __fzxWorld.spawn.y - 300
+  fzxVector2DSet __fzxWorld.gravity, 0.0, 100.0
 
   ' Some math used on the impulse side
   ' Todo: move this elsewhere
   DIM o AS tFZX_VECTOR2d
   fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
   __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
+
+
+  ' Set camera position
+  fzxVector2DSet __fzxCamera.position, __fzxWorld.spawn.x, __fzxWorld.spawn.y - 300
+
 
   '********************************************************
   '   Build Level
@@ -108,6 +109,7 @@ SUB buildScene
   temp = fzxCreateBoxBodyEx("floor", 800, 10)
   fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxWorld.spawn.x, __fzxWorld.spawn.y
   fzxSetBody cFZX_PARAMETER_STATIC, temp, 0, 0
+  fzxSetBody cFZX_PARAMETER_COLOR, temp, _RGB32(255, 255, 127), 0
 
 
 END SUB
@@ -121,7 +123,7 @@ SUB renderBodies STATIC
   i = 0: DO WHILE i < ub
     IF __fzxBody(i).enable AND __fzxBody(i).objectHash <> 0 THEN
       IF __fzxBody(i).shape.ty = cFZX_SHAPE_CIRCLE THEN
-        renderWireFrameCircle i, _RGB32(0, 255, 0)
+        renderWireFrameCircle i
       ELSE IF __fzxBody(i).shape.ty = cFZX_SHAPE_POLYGON THEN
           renderWireFramePoly i
         END IF
@@ -132,16 +134,16 @@ SUB renderBodies STATIC
 
 END SUB
 
-SUB renderWireFrameCircle (index AS LONG, c AS LONG)
+SUB renderWireFrameCircle (index AS LONG)
   DIM AS tFZX_VECTOR2d o1, o2
   fzxWorldToCameraEx __fzxBody(index).fzx.position, o1
-  CIRCLE (o1.x, o1.y), __fzxBody(index).shape.radius * __fzxCamera.zoom, c
+  CIRCLE (o1.x, o1.y), __fzxBody(index).shape.radius * __fzxCamera.zoom, __fzxBody(index).c
   o2.x = o1.x + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * COS(__fzxBody(index).fzx.orient)
   o2.y = o1.y + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * SIN(__fzxBody(index).fzx.orient)
-  LINE (o1.x, o1.y)-(o2.x, o2.y), c
+  LINE (o1.x, o1.y)-(o2.x, o2.y), __fzxBody(index).c
 END SUB
 
-SUB renderWireFramePoly (index AS LONG) STATIC
+SUB renderWireFramePoly (index AS LONG)
   DIM AS LONG polyCount, i
   polyCount = fzxGetBodyD(CFZX_PARAMETER_POLYCOUNT, index, 0)
   DIM AS tFZX_VECTOR2d vert1, vert2
@@ -151,7 +153,7 @@ SUB renderWireFramePoly (index AS LONG) STATIC
 
     fzxWorldToCamera index, vert1
     fzxWorldToCamera index, vert2
-    LINE (vert1.x, vert1.y)-(vert2.x, vert2.y), _RGB(0, 255, 0)
+    LINE (vert1.x, vert1.y)-(vert2.x, vert2.y), __fzxBody(index).c
   i = i + 1: LOOP
 END SUB
 
