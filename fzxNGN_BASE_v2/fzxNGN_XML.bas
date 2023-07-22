@@ -6,7 +6,7 @@ $IF FZXXMLINCLUDE = UNDEFINED THEN
   SUB _____XML_HANDLING (): END SUB
 
   SUB XMLparse (file AS STRING, con() AS tFZX_STRINGTUPLE)
-    DIM AS STRING xml(0), x, element_name, stack(0), context
+    DIM AS STRING xml(0 TO 0), x, element_name, stack(0 TO 0), context
     DIM AS LONG index
     DIM AS LONG element_start, element_ending
     DIM AS LONG element_first_space, element_pop
