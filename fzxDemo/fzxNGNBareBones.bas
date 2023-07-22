@@ -9,8 +9,6 @@ _TITLE "fzxNGN Bare Bones"
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM SHARED AS LONG iterations: iterations = 100
-DIM SHARED AS DOUBLE dt: dt = 1 / 60
 
 '**********************************************************************************************
 ' Build the playfield
@@ -26,7 +24,7 @@ DO
 
   fzxHandleInputDevice
   animatescene
-  fzxImpulseStep dt, iterations
+  fzxImpulseStep
   CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
   LOCATE 2: PRINT "Throw objects by moving the mouse and releasing the left mose button"
   renderBodies
@@ -94,7 +92,7 @@ SUB buildScene
   ' Some math used on the impulse side
   ' Todo: move this elsewhere
   DIM o AS tFZX_VECTOR2d
-  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
+  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, __fzxWorld.deltaTime
   __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
 
 
