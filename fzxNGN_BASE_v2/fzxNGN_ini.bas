@@ -24,6 +24,10 @@
 $IF FZXINIINCLUDE = UNDEFINED THEN
   $LET FZXINIINCLUDE = TRUE
 
+  OPTION _EXPLICIT
+
+  '$dynamic
+
   TYPE tFZX_VECTOR2d
     x AS DOUBLE
     y AS DOUBLE
@@ -129,7 +133,6 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
     l_ctrl AS _UNSIGNED _BYTE
     l_alt AS _UNSIGNED _BYTE
     l_shift AS _UNSIGNED _BYTE
-
   END TYPE
 
   TYPE tFZX_INPUTDEVICE
@@ -260,7 +263,7 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
     spawn AS tFZX_VECTOR2d
     terrainPosition AS tFZX_VECTOR2d
     resting AS DOUBLE
-    dT AS DOUBLE
+    deltaTime AS DOUBLE
     iterations AS INTEGER
   END TYPE
 
@@ -319,6 +322,12 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
     fpsCount1 AS LONG
     fpsLast1 AS LONG
     dt AS DOUBLE
+  END TYPE
+
+  TYPE tFZX_STATS
+    numberOfBodies AS LONG
+    numberOfJoints AS LONG
+    numberOfStaticBodies AS LONG
   END TYPE
 
   CONST cFZX_FALSE = 0
@@ -386,14 +395,17 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
   CONST cMAXVERTSPERBODY = 64
 
 
-  DIM SHARED AS tFZX_BODY __fzxBody(cSTARTINGNUMBEROFOBJECTS)
-  DIM SHARED AS tFZX_JOINT __fzxJoints(cSTARTINGNUMBEROFJOINTS)
-  DIM SHARED AS tFZX_HIT __fzxHits(cSTARTINGNUMBEROFHITS)
+  DIM SHARED AS tFZX_BODY __fzxBody(0 TO cSTARTINGNUMBEROFOBJECTS)
+  DIM SHARED AS tFZX_JOINT __fzxJoints(0 TO cSTARTINGNUMBEROFJOINTS)
+  DIM SHARED AS tFZX_HIT __fzxHits(0 TO cSTARTINGNUMBEROFHITS)
   DIM SHARED AS tFZX_CAMERA __fzxCamera
   DIM SHARED AS tFZX_WORLD __fzxWorld
   DIM SHARED AS tFZX_FPS __fzxFPSCount
   DIM SHARED AS tFZX_INPUTDEVICE __fzxInputDevice
   DIM SHARED AS tFZX_SETTINGS __fzxSettings 'currently only used for the mouse doubleclick delay
+  DIM SHARED AS tFZX_STATS __fzxStats
+
+
 
   DIM AS LONG iter
   FOR iter = 0 TO UBOUND(__fzxBody)
@@ -403,5 +415,35 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
   FOR iter = 0 TO UBOUND(__fzxJoints)
     __fzxJoints(iter).overwrite = 1
   NEXT
+
+
+  '********************************************************
+  '   Setup World with default values
+  '********************************************************
+
+  __fzxWorld.minusLimit.x = -200000
+  __fzxWorld.minusLimit.y = -200000
+  __fzxWorld.plusLimit.x = 200000
+  __fzxWorld.plusLimit.y = 200000
+
+  __fzxWorld.spawn.x = 0
+  __fzxWorld.spawn.y = 0
+
+  __fzxWorld.gravity.x = 0
+  __fzxWorld.gravity.y = 0
+
+  'Initialize camera
+  __fzxCamera.zoom = 1
+  __fzxCamera.invZoom = 1
+  __fzxCamera.position = __fzxWorld.spawn
+
+  __fzxWorld.resting = cFZX_EPSILON
+  __fzxWorld.deltaTime = 1 / 60
+  __fzxWorld.iterations = 100
+
+  __fzxSettings.mouse.doubleclickdelay = .25
+
+
+
 
 $END IF
