@@ -6,7 +6,7 @@ _TITLE "fzxNGN Bare Bones"
 
 ' Initialize FZXNGN types, globals and constants
 '$include:'..\fzxNGN_BASE_v2\fzxNGN_ini.bas'
-
+fzxInitFPS
 SCREEN _NEWIMAGE(1024, 768, 32)
 
 
@@ -25,9 +25,12 @@ DO
   fzxHandleInputDevice
   animatescene
   fzxImpulseStep
-  CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
-  LOCATE 2: PRINT "Throw objects by moving the mouse and releasing the left mose button"
+  CLS: LOCATE 1, 10: PRINT "Click the mouse on the playfield to spawn an object"
+  LOCATE 2, 10: PRINT "Throw objects by moving the mouse and releasing the left mose button"
+  LOCATE 1, 1: PRINT USING "FPS:###"; __fzxStats.fps
+  LOCATE 3, 1: PRINT USING "Number of objects:####"; __fzxStats.numberOfBodies
   renderBodies
+  fzxHandleFPSMain
   _LIMIT 60
   _DISPLAY
 LOOP UNTIL INKEY$ = CHR$(27)

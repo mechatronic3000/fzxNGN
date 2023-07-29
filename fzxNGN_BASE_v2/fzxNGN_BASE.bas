@@ -2039,20 +2039,20 @@ SUB fzxInitFPS
   ON TIMER(timerOne, 1) fzxFPS
   TIMER(timerOne) ON
 
-  timerOne = _FREETIMER
-  ON TIMER(timerOne, 1) fzxFPSMain
-  TIMER(timerOne) ON
+  'timerOne = _FREETIMER
+  'ON TIMER(timerOne, 1) fzxFPSMain
+  'TIMER(timerOne) ON
 
-  timerOne = _FREETIMER
-  ON TIMER(timerOne, .001) fzxFPSdt
-  TIMER(timerOne) ON
+  'timerOne = _FREETIMER
+  'ON TIMER(timerOne, .001) fzxFPSdt
+  'TIMER(timerOne) ON
 END SUB
 
 SUB fzxFPS
-  DIM fpss AS STRING
-  fpss = "   MAIN LOOP FPS:" + STR$(__fzxFPSCount.fpsLast) + "  OPENGL FPS:" + STR$(__fzxFPSCount.fpsLast1) + "   "
-  _PRINTSTRING ((_WIDTH / 2) - (_PRINTWIDTH(fpss) / 2), 0), fpss
-
+  'DIM fpss AS STRING
+  'fpss = "   MAIN LOOP FPS:" + STR$(__fzxFPSCount.fpsLast) + "  OPENGL FPS:" + STR$(__fzxFPSCount.fpsLast1) + "   "
+  '_PRINTSTRING ((_WIDTH / 2) - (_PRINTWIDTH(fpss) / 2), 0), fpss
+  __fzxStats.fps = __fzxFPSCount.fpsLast
   __fzxFPSCount.fpsLast = __fzxFPSCount.fpsCount
   __fzxFPSCount.fpsCount = 0
 END SUB
