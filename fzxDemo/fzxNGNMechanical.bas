@@ -11,8 +11,9 @@ _TITLE "fzxNGN Gears"
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM AS LONG iterations: iterations = 10
-DIM SHARED AS DOUBLE dt: dt = 1 / 120
+
+__fzxWorld.deltaTime = 1 / 120
+__fzxWorld.iterations = 10
 
 '**********************************************************************************************
 ' Build the playfield
@@ -28,7 +29,7 @@ DO
   CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
   fzxHandleInputDevice
   animatescene
-  fzxImpulseStep dt, iterations
+  fzxImpulseStep
   renderBodies
   _DISPLAY
 LOOP UNTIL INKEY$ = CHR$(27)
@@ -133,7 +134,7 @@ SUB buildScene
   ' Some math used on the impulse side
   ' Todo: move this elsewhere
   DIM o AS tFZX_VECTOR2d
-  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
+  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, __fzxWorld.deltaTime
   __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
 
   '********************************************************
@@ -221,10 +222,10 @@ SUB renderWireFrameCircle (index AS LONG, c AS LONG)
   fzxWorldToCameraEx __fzxBody(index).fzx.position, o1
   CIRCLE (o1.x, o1.y), __fzxBody(index).shape.radius * __fzxCamera.zoom, c
   $IF CIRCLEVISUAL = TRUE THEN
-    DIM AS tFZX_VECTOR2d o2
-    o2.x = o1.x + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * COS(__fzxBody(index).fzx.orient)
-    o2.y = o1.y + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * SIN(__fzxBody(index).fzx.orient)
-    LINE (o1.x, o1.y)-(o2.x, o2.y), c
+      DIM AS tFZX_VECTOR2d o2
+      o2.x = o1.x + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * COS(__fzxBody(index).fzx.orient)
+      o2.y = o1.y + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * SIN(__fzxBody(index).fzx.orient)
+      LINE (o1.x, o1.y)-(o2.x, o2.y), c
   $END IF
 END SUB
 

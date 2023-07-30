@@ -233,7 +233,7 @@ SUB fzxPolyCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS LON
 
   DIM vertlength AS LONG: vertlength = sides
   DIM AS DOUBLE theta
-  DIM verts(vertlength) AS tFZX_VECTOR2d
+  DIM verts(0 TO vertlength) AS tFZX_VECTOR2d
   DIM AS LONG vertCount: vertCount = 0
 
   __fzxBody(index).shape.maxDimension.x = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
@@ -252,7 +252,7 @@ SUB fzxPolyCreateTest (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS
 
   DIM vertlength AS LONG: vertlength = sides
   DIM AS DOUBLE theta
-  DIM verts(vertlength) AS tFZX_VECTOR2d
+  DIM verts(0 TO vertlength) AS tFZX_VECTOR2d
   DIM AS LONG vertCount: vertCount = 0
   DIM AS LONG odd
 
@@ -301,7 +301,7 @@ END SUB
 
 SUB fzxBoxCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE)
   DIM vertlength AS LONG: vertlength = 3
-  DIM verts(vertlength) AS tFZX_VECTOR2d
+  DIM verts(0 TO vertlength) AS tFZX_VECTOR2d
 
   __fzxBody(index).shape.maxDimension.x = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
   __fzxBody(index).shape.maxDimension.y = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
@@ -317,7 +317,7 @@ END SUB
 SUB fzxTrapCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, yOff1 AS DOUBLE, yOff2 AS DOUBLE)
   DIM vertlength AS LONG: vertlength = 3
   DIM maxYSide AS DOUBLE
-  DIM verts(vertlength) AS tFZX_VECTOR2d
+  DIM verts(0 TO vertlength) AS tFZX_VECTOR2d
   maxYSide = fzxScalarMax(yOff1, yOff2) + sizey
   __fzxBody(index).shape.maxDimension.x = fzxScalarMax(sizex, maxYSide) * cFZX_AABB_TOLERANCE
   __fzxBody(index).shape.maxDimension.y = fzxScalarMax(sizex, maxYSide) * cFZX_AABB_TOLERANCE
@@ -332,7 +332,7 @@ END SUB
 
 SUB fzxCreateTerrainBody (index AS LONG, slices AS LONG, sliceWidth AS DOUBLE, nominalHeight AS DOUBLE)
   DIM shape AS tFZX_SHAPE
-  DIM elevation(slices) AS DOUBLE
+  DIM elevation(0 TO slices) AS DOUBLE
   DIM AS LONG i, j
 
   FOR j = 0 TO slices
@@ -378,7 +378,7 @@ END SUB
 SUB fzxTerrainCreate (index AS LONG, ele1 AS DOUBLE, ele2 AS DOUBLE, sliceWidth AS DOUBLE, nominalHeight AS DOUBLE)
   DIM AS LONG vertLength
   vertLength = 3 ' numOfslices + 1
-  DIM verts(vertLength) AS tFZX_VECTOR2d
+  DIM verts(0 TO vertLength) AS tFZX_VECTOR2d
   DIM AS DOUBLE maxElev: maxElev = fzxScalarMax(ele1, ele2) + nominalHeight
 
 
@@ -395,7 +395,7 @@ END SUB
 ' this is a test shape and should only be used in testing concave objects
 SUB fzxVShapeCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE)
   DIM vertlength AS LONG: vertlength = 7
-  DIM verts(vertlength) AS tFZX_VECTOR2d
+  DIM verts(0 TO vertlength) AS tFZX_VECTOR2d
 
   fzxVector2DSet verts(0), -sizex, -sizey
   fzxVector2DSet verts(1), sizex, -sizey
@@ -422,7 +422,7 @@ SUB fzxVertexSet (index AS LONG, verts() AS tFZX_VECTOR2d)
   vertLength = UBOUND(verts)
   rightMost = fzxFindRightMostVert(verts())
 
-  DIM hull(vertLength) AS LONG
+  DIM hull(0 TO vertLength) AS LONG
   DIM outCount AS LONG: outCount = 0
   DIM indexHull AS LONG: indexHull = rightMost
   DIM nextHullIndex AS LONG
@@ -514,7 +514,7 @@ SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
       IF __fzxJoints(iter).body1 = index OR __fzxJoints(iter).body2 = index THEN
         fzxJointDelete iter
       END IF
-    iter = iter + 1: LOOP WHILE iter < UBOUND(__fzxJoints)
+    iter = iter + 1: LOOP WHILE iter <= UBOUND(__fzxJoints)
 
     IF NOT perm THEN
       __fzxBody(index).enable = 0
@@ -526,13 +526,13 @@ SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
       iter = index: DO
         __fzxBody(iter) = __fzxBody(iter + 1)
       iter = iter + 1: LOOP WHILE iter < UBOUND(__fzxBody)
-      REDIM _PRESERVE __fzxBody(UBOUND(__fzxBody) - 1) AS tFZX_BODY
+      REDIM _PRESERVE __fzxBody(0 TO UBOUND(__fzxBody) - 1) AS tFZX_BODY
 
       'fix all the joints bodies after the index since then all the bodies are shifted toward zero index
       iter = 0: DO
         IF __fzxJoints(iter).body1 >= index THEN __fzxJoints(iter).body1 = __fzxJoints(iter).body1 - 1
         IF __fzxJoints(iter).body2 >= index THEN __fzxJoints(iter).body2 = __fzxJoints(iter).body2 - 1
-      iter = iter + 1: LOOP WHILE iter < UBOUND(__fzxJoints)
+      iter = iter + 1: LOOP WHILE iter <= UBOUND(__fzxJoints)
     END IF
   END IF
 END SUB
@@ -958,7 +958,7 @@ END SUB
 
 FUNCTION fzxCollisionPPClip (n AS tFZX_VECTOR2d, c AS DOUBLE, face() AS tFZX_VECTOR2d)
   DIM sp AS LONG: sp = 0
-  DIM o(10) AS tFZX_VECTOR2d
+  DIM o(0 TO 10) AS tFZX_VECTOR2d
 
   o(0) = face(0)
   o(1) = face(1)
@@ -1032,13 +1032,13 @@ END SUB
 
 SUB fzxCollisionPPHandle (m AS tFZX_MANIFOLD, contacts() AS tFZX_VECTOR2d, A AS LONG, B AS LONG)
   m.contactCount = 0
-  DIM faceA(100) AS LONG
+  DIM faceA(0 TO 100) AS LONG
 
   DIM penetrationA AS DOUBLE
   penetrationA = fzxCollisionPPFindAxisLeastPenetration(faceA(), A, B)
   IF penetrationA >= 0.0 THEN EXIT SUB
 
-  DIM faceB(100) AS LONG
+  DIM faceB(0 TO 100) AS LONG
 
   DIM penetrationB AS DOUBLE
   penetrationB = fzxCollisionPPFindAxisLeastPenetration(faceB(), B, A)
@@ -1063,7 +1063,7 @@ SUB fzxCollisionPPHandle (m AS tFZX_MANIFOLD, contacts() AS tFZX_VECTOR2d, A AS 
     flip = 1
   END IF
 
-  DIM incidentFace(2) AS tFZX_VECTOR2d
+  DIM incidentFace(0 TO 2) AS tFZX_VECTOR2d
 
   fzxCollisionPPFindIncidentFace incidentFace(), RefPoly, IncPoly, referenceIndex
   DIM v1 AS tFZX_VECTOR2d
@@ -1191,33 +1191,33 @@ END FUNCTION
 '**********************************************************************************************
 SUB _______________PHYSICS_IMPULSE_MATH: END SUB
 
-SUB fzxImpulseIntegrateForces (index AS LONG, dt AS DOUBLE)
+SUB fzxImpulseIntegrateForces (index AS LONG)
   IF __fzxBody(index).fzx.invMass = 0.0 THEN EXIT SUB
   DIM dts AS DOUBLE
-  dts = dt * .5
+  dts = __fzxWorld.deltaTime * .5
   fzxVector2DAddVectorScalar __fzxBody(index).fzx.velocity, __fzxBody(index).fzx.force, __fzxBody(index).fzx.invMass * dts
   fzxVector2DAddVectorScalar __fzxBody(index).fzx.velocity, __fzxWorld.gravity, dts
   __fzxBody(index).fzx.angularVelocity = __fzxBody(index).fzx.angularVelocity + (__fzxBody(index).fzx.torque * __fzxBody(index).fzx.invInertia * dts)
 END SUB
 
-SUB fzxImpulseIntegrateVelocity (index AS LONG, dt AS DOUBLE)
+SUB fzxImpulseIntegrateVelocity (index AS LONG)
   IF __fzxBody(index).fzx.invMass = 0.0 THEN EXIT SUB
-  fzxVector2DAddVectorScalar __fzxBody(index).fzx.position, __fzxBody(index).fzx.velocity, dt
-  __fzxBody(index).fzx.orient = __fzxBody(index).fzx.orient + (__fzxBody(index).fzx.angularVelocity * dt)
+  fzxVector2DAddVectorScalar __fzxBody(index).fzx.position, __fzxBody(index).fzx.velocity, __fzxWorld.deltaTime
+  __fzxBody(index).fzx.orient = __fzxBody(index).fzx.orient + (__fzxBody(index).fzx.angularVelocity * __fzxWorld.deltaTime)
   fzxMatrix2x2SetRadians __fzxBody(index).shape.u, __fzxBody(index).fzx.orient
-  fzxImpulseIntegrateForces index, dt
+  fzxImpulseIntegrateForces index
 END SUB
 
-SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
+SUB fzxImpulseStep
   DIM AS LONG uB: uB = UBOUND(__fzxBody)
   DIM AS LONG uJ: uJ = UBOUND(__fzxJoints)
   DIM AS LONG uH: uH = UBOUND(__fzxHits)
   DIM A AS tFZX_BODY
   DIM B AS tFZX_BODY
-  DIM contacts(uB) AS tFZX_VECTOR2d
+  DIM contacts(0 TO uB) AS tFZX_VECTOR2d
   DIM m AS tFZX_MANIFOLD
-  DIM manifolds(uB * uB) AS tFZX_MANIFOLD
-  DIM collisions(uB * uB, uB) AS tFZX_VECTOR2d
+  DIM manifolds(0 TO uB * uB) AS tFZX_MANIFOLD
+  DIM collisions(0 TO uB * uB, 0 TO uB) AS tFZX_VECTOR2d
   DIM AS tFZX_VECTOR2d tv, tv1
   DIM AS DOUBLE d
   DIM AS LONG mval
@@ -1226,16 +1226,22 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
   DIM AS LONG i, j, k, index
   DIM hitCount AS LONG: hitCount = 0
 
+
   i = 0: DO WHILE i <= uH
     __fzxHits(i).A = -1
     __fzxHits(i).B = -1
   i = i + 1: LOOP
 
   hitCount = 0
+  __fzxStats.numberOfBodies = 0
+  __fzxStats.numberOfJoints = 0
+  __fzxStats.numberOfStaticBodies = 0
 
   i = 0: DO WHILE i < uB
     A = __fzxBody(i)
     IF A.enable THEN
+      __fzxStats.numberOfBodies = __fzxStats.numberOfBodies + 1
+      IF A.fzx.invMass = 0.0 THEN __fzxStats.numberOfStaticBodies = __fzxStats.numberOfStaticBodies + 1
       j = i + 1: DO WHILE j < uB
         B = __fzxBody(j)
         ' B enabled ?
@@ -1271,10 +1277,10 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
                     __fzxHits(hitCount).position = contacts(k)
                     collisions(manifoldCount, k) = contacts(k)
                     hitCount = hitCount + 1
-                    IF hitCount > UBOUND(__fzxHits) THEN REDIM _PRESERVE __fzxHits(hitCount * 1.5) AS tFZX_HIT
+                    IF hitCount > UBOUND(__fzxHits) THEN REDIM _PRESERVE __fzxHits(0 TO hitCount * 1.5) AS tFZX_HIT
                   k = k + 1: LOOP
                   manifoldCount = manifoldCount + 1
-                  IF manifoldCount > UBOUND(manifolds) THEN REDIM _PRESERVE manifolds(manifoldCount * 1.5) AS tFZX_MANIFOLD
+                  IF manifoldCount > UBOUND(manifolds) THEN REDIM _PRESERVE manifolds(0 TO manifoldCount * 1.5) AS tFZX_MANIFOLD
                 END IF
               END IF
             END IF
@@ -1287,7 +1293,7 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
 
   '    Integrate forces
   i = 0: DO WHILE i <= uB
-    IF __fzxBody(i).enable AND __fzxBody(i).noPhysics = 0 THEN fzxImpulseIntegrateForces i, dt
+    IF __fzxBody(i).enable AND __fzxBody(i).noPhysics = 0 THEN fzxImpulseIntegrateForces i
   i = i + 1: LOOP
   '    Initialize collision
   i = 0: DO WHILE i < manifoldCount
@@ -1299,11 +1305,11 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
 
   ' joint pre Steps
   i = 0: DO WHILE i <= uJ
-    IF __fzxJoints(i).overwrite = 0 THEN fzxJointPrestep i, dt
+    IF __fzxJoints(i).overwrite = 0 THEN fzxJointPrestep i
   i = i + 1: LOOP
 
   ' Solve collisions
-  j = 0: DO WHILE j < iterations:
+  j = 0: DO WHILE j < __fzxWorld.iterations
     i = 0: DO WHILE i < manifoldCount
       k = 0: DO WHILE k < manifolds(i).contactCount
         contacts(k) = collisions(i, k)
@@ -1347,7 +1353,7 @@ SUB fzxImpulseStep (dt AS DOUBLE, iterations AS LONG)
 
   '// Integrate velocities
   i = 0: DO WHILE i < uB
-    IF __fzxBody(i).enable AND NOT __fzxBody(i).noPhysics THEN fzxImpulseIntegrateVelocity i, dt
+    IF __fzxBody(i).enable AND NOT __fzxBody(i).noPhysics THEN fzxImpulseIntegrateVelocity i
   i = i + 1: LOOP
   '// Correct positions
   i = 0: DO WHILE i < manifoldCount
@@ -1547,7 +1553,7 @@ FUNCTION fzxJointAllocate
     ' uBTemp should be the next element in the newly allocated array
     uBTemp = UBOUND(__fzxJoints) + 1
     ' Add 10 more elements to the __fzxJoints array, while preserving the contents
-    REDIM _PRESERVE __fzxJoints(UBOUND(__fzxJoints) + 10) AS tFZX_JOINT
+    REDIM _PRESERVE __fzxJoints(0 TO UBOUND(__fzxJoints) + 10) AS tFZX_JOINT
     ' uB is the size of the newly expanded array
     uB = UBOUND(__fzxJoints)
     ' Mark all of the newly created elements to be overwritten
@@ -1660,8 +1666,9 @@ END SUB
 
 SUB _______________JOINT_MATH_FUNCTIONS: END SUB
 
-SUB fzxJointPrestep (index AS LONG, inv_dt AS DOUBLE)
+SUB fzxJointPrestep (index AS LONG)
   IF __fzxJoints(index).overwrite THEN EXIT SUB
+  __fzxStats.numberOfJoints = __fzxStats.numberOfJoints + 1
   DIM Rot1 AS tFZX_MATRIX2D: Rot1 = __fzxBody(__fzxJoints(index).body1).shape.u
   DIM Rot2 AS tFZX_MATRIX2D: Rot2 = __fzxBody(__fzxJoints(index).body2).shape.u
   DIM b1invMass AS DOUBLE
@@ -1700,7 +1707,7 @@ SUB fzxJointPrestep (index AS LONG, inv_dt AS DOUBLE)
   DIM p2 AS tFZX_VECTOR2d: fzxVector2DAddVectorND p2, __fzxBody(__fzxJoints(index).body2).fzx.position, __fzxJoints(index).r2
   DIM dp AS tFZX_VECTOR2d: fzxVector2DSubVectorND dp, p2, p1
 
-  fzxVector2DMultiplyScalarND __fzxJoints(index).bias, dp, -__fzxJoints(index).biasFactor * inv_dt
+  fzxVector2DMultiplyScalarND __fzxJoints(index).bias, dp, -__fzxJoints(index).biasFactor * __fzxWorld.deltaTime
   ' vectorSet j.bias, 0, 0
   fzxVector2DSet __fzxJoints(index).P, 0, 0
 END SUB
@@ -1832,7 +1839,7 @@ FUNCTION fzxBodyManagerAdd ()
   ' Prepare the the newly added elements in the array for overwrite
   tempUb = ub + 1
   ' Add more bodies
-  REDIM _PRESERVE __fzxBody(ub + 10) AS tFZX_BODY
+  REDIM _PRESERVE __fzxBody(0 TO ub + 10) AS tFZX_BODY
   ub = UBOUND(__fzxBody)
   ' mark these to be overwritten
   iter = tempUb: DO WHILE iter <= ub
@@ -1846,7 +1853,7 @@ END FUNCTION
 FUNCTION fzxBodyWithHash (hash AS _INTEGER64)
   DIM AS LONG i
   fzxBodyWithHash = -1
-  FOR i = 0 TO UBOUND(__fzxBody) - 1
+  FOR i = 0 TO UBOUND(__fzxBody)
     IF __fzxBody(i).objectHash = hash THEN
       fzxBodyWithHash = i
       EXIT FUNCTION
@@ -1857,7 +1864,7 @@ END FUNCTION
 FUNCTION fzxBodyWithHashMask (hash AS _INTEGER64, mask AS LONG)
   DIM AS LONG i
   fzxBodyWithHashMask = -1
-  FOR i = 0 TO UBOUND(__fzxBody) - 1
+  FOR i = 0 TO UBOUND(__fzxBody)
     IF (__fzxBody(i).objectHash AND mask) = (hash AND mask) THEN
       fzxBodyWithHashMask = i
       EXIT FUNCTION
@@ -1868,10 +1875,10 @@ END FUNCTION
 FUNCTION fzxBodyManagerID (objName AS STRING)
   DIM i AS LONG
   DIM uID AS _INTEGER64
-  uID = fzxComputeHash(RTRIM$(LTRIM$(objName)))
+  uID = fzxComputeHash(_TRIM$(objName))
   fzxBodyManagerID = -1
 
-  FOR i = 0 TO UBOUND(__fzxBody) - 1
+  FOR i = 0 TO UBOUND(__fzxBody)
     IF __fzxBody(i).objectHash = uID THEN
       fzxBodyManagerID = i
       EXIT FUNCTION
@@ -1882,7 +1889,7 @@ END FUNCTION
 FUNCTION fzxBodyContainsString (start AS LONG, s AS STRING)
   fzxBodyContainsString = -1
   DIM AS LONG j
-  FOR j = start TO UBOUND(__fzxBody) - 1
+  FOR j = start TO UBOUND(__fzxBody)
     IF INSTR(__fzxBody(j).objectName, s) THEN
       fzxBodyContainsString = j
       EXIT FUNCTION
@@ -2032,20 +2039,20 @@ SUB fzxInitFPS
   ON TIMER(timerOne, 1) fzxFPS
   TIMER(timerOne) ON
 
-  timerOne = _FREETIMER
-  ON TIMER(timerOne, 1) fzxFPSMain
-  TIMER(timerOne) ON
+  'timerOne = _FREETIMER
+  'ON TIMER(timerOne, 1) fzxFPSMain
+  'TIMER(timerOne) ON
 
-  timerOne = _FREETIMER
-  ON TIMER(timerOne, .001) fzxFPSdt
-  TIMER(timerOne) ON
+  'timerOne = _FREETIMER
+  'ON TIMER(timerOne, .001) fzxFPSdt
+  'TIMER(timerOne) ON
 END SUB
 
 SUB fzxFPS
-  DIM fpss AS STRING
-  fpss = "   MAIN LOOP FPS:" + STR$(__fzxFPSCount.fpsLast) + "  OPENGL FPS:" + STR$(__fzxFPSCount.fpsLast1) + "   "
-  _PRINTSTRING ((_WIDTH / 2) - (_PRINTWIDTH(fpss) / 2), 0), fpss
-
+  'DIM fpss AS STRING
+  'fpss = "   MAIN LOOP FPS:" + STR$(__fzxFPSCount.fpsLast) + "  OPENGL FPS:" + STR$(__fzxFPSCount.fpsLast1) + "   "
+  '_PRINTSTRING ((_WIDTH / 2) - (_PRINTWIDTH(fpss) / 2), 0), fpss
+  __fzxStats.fps = __fzxFPSCount.fpsLast
   __fzxFPSCount.fpsLast = __fzxFPSCount.fpsCount
   __fzxFPSCount.fpsCount = 0
 END SUB

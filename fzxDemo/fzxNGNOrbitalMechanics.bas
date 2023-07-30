@@ -11,8 +11,8 @@ _TITLE "fzxNGN Orbital Mechanics"
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM AS LONG iterations: iterations = 1000
-DIM SHARED AS DOUBLE dt: dt = 1 / 120
+__fzxWorld.deltaTime = 1 / 120
+__fzxWorld.iterations = 1000
 
 TYPE tTRAIL
   xy AS tFZX_VECTOR2d
@@ -20,7 +20,17 @@ TYPE tTRAIL
   c AS LONG
 END TYPE
 
+TYPE tTEMPBODY
+  en AS _BYTE
+  xy AS tFZX_VECTOR2d
+  mass AS DOUBLE
+  vel AS tFZX_VECTOR2d
+  force AS tFZX_VECTOR2d
+END TYPE
+
+DIM SHARED AS tFZX_BODY tempBody(UBOUND(__fzxBody))
 DIM SHARED trail(5000) AS tTRAIL
+DIM SHARED AS _BYTE pause
 
 '**********************************************************************************************
 ' Build the playfield
@@ -36,10 +46,12 @@ buildScene
 '**********************************************************************************************
 
 DO
-  CLS
+  IF NOT pause THEN CLS
   fzxHandleInputDevice
   animatescene
-  fzxImpulseStep dt, iterations
+  IF NOT pause THEN
+    fzxImpulseStep
+  END IF
   renderBodies
   _DISPLAY
 LOOP UNTIL INKEY$ = CHR$(27)
@@ -54,8 +66,10 @@ SYSTEM
 '**********************************************************************************************
 
 SUB animatescene
-  DIM AS LONG temp
-  DIM AS DOUBLE vel, angle, sa, ca
+  DIM AS LONG temp, iter, bix, i, j, ub
+  DIM AS DOUBLE vel, angle, sa, ca, dist, gv
+  DIM AS tFZX_VECTOR2d gravVec, v2
+  'DIM AS tTEMPBODY b(UBOUND(__fzxBody))
 
   ' Use the mouse wheel to set Camera Zoom
   __fzxCamera.zoom = fzxImpulseClamp(.001, 2, __fzxCamera.zoom - (__fzxInputDevice.mouse.wCount * .001))
@@ -87,21 +101,57 @@ SUB animatescene
     fzxSetBody cFZX_PARAMETER_POSITION, temp, __fzxInputDevice.mouse.worldPosition.x, __fzxInputDevice.mouse.worldPosition.y
     ' Give it the mouse's velocity
     fzxSetBody cFZX_PARAMETER_VELOCITY, temp, sa, ca
-    fzxSetBody cFZX_PARAMETER_STATICFRICTION, temp, 0.9, 0
-    fzxSetBody cFZX_PARAMETER_DYNAMICFRICTION, temp, 0.7, 0
-    fzxSetBody cFZX_PARAMETER_RESTITUTION, temp, .10, 0
 
   END IF
 
-
-  gravitizeEverthing
+  IF NOT pause THEN
+    gravitizeEverthing
+  END IF
 
   LOCATE 1
   PRINT "Simple Gravity Mechanics Simulator"
   PRINT "Click and drag left mouse button to add a object and give it velocity."
   PRINT "Right click to move the camera. Use mouse wheel to zoom."
+  PRINT "Press <SPACE> to pause and unpause simulation"
+  IF pause THEN LOCATE 44: PRINT "--PAUSED--"
 
   IF fzxBodyManagerID("planetX") >= 0 THEN LOCATE 45: PRINT USING "PlanetX mass:#######.#"; __fzxBody(fzxBodyManagerID("planetX")).fzx.mass
+  LOCATE 46: PRINT USING "Zoom :##.######  Scale: ######.##"; __fzxCamera.zoom; __fzxCamera.invZoom
+  ' Pause Mode
+  IF __fzxInputDevice.keyboard.keyHit = 32 THEN
+    pause = NOT pause
+  END IF
+
+  'Not working correctly
+  'IF pause THEN
+  '  ub = UBOUND(__fzxBody)
+  '  REDIM b(ub) AS tTEMPBODY
+  '  bix = 0: DO WHILE bix <= ub
+  '    b(bix).en = __fzxBody(bix).enable AND __fzxBody(bix).objectHash <> 0
+  '    b(bix).xy = __fzxBody(bix).fzx.position
+  '    b(bix).vel = __fzxBody(bix).fzx.velocity
+  '    b(bix).mass = __fzxBody(bix).fzx.mass
+  '  bix = bix + 1: LOOP
+
+  '  iter = 0: DO WHILE iter < 2000
+  '    i = 0: DO WHILE i <= ub
+  '      IF b(i).en THEN
+  '        j = 0: DO WHILE j <= ub
+  '          IF b(j).en AND i <> j THEN
+  '            dist = fzxVector2DDistance(b(i).xy, b(j).xy)
+  '            gv = gravity(b(i).mass, b(j).mass, dist)
+  '            fzxVector2DSubVectorND gravVec, b(i).xy, b(j).xy
+  '            fzxVector2DNormalize gravVec
+  '            fzxVector2DMultiplyScalar gravVec, -gv
+  '            integrateGravity b(i), gravVec
+  '          END IF
+  '        j = j + 1: LOOP
+  '        fzxWorldToCameraEx b(i).xy, v2
+  '        PSET (v2.x, v2.y), _RGB32(244, 0, 127)
+  '      END IF
+  '    i = i + 1: LOOP
+  '  iter = iter + 1: LOOP
+  'END IF
 END SUB
 
 '********************************************************
@@ -136,6 +186,20 @@ SUB buildScene
 
 END SUB
 
+FUNCTION gravity# (massA AS DOUBLE, massB AS DOUBLE, dist AS DOUBLE)
+  gravity = (cGRAVCONST * ((massA * massB) / (dist * dist)))
+END FUNCTION
+
+SUB integrateGravity (b AS tTEMPBODY, gv AS tFZX_VECTOR2d)
+  DIM dts AS DOUBLE
+  dts = __fzxWorld.deltaTime * .5
+  fzxVector2DAddVectorScalar b.xy, b.vel, __fzxWorld.deltaTime
+  fzxVector2DAddVectorScalar b.vel, gv, (1 / b.mass) * dts
+END SUB
+
+
+
+
 SUB gravitizeEverthing
   DIM AS LONG i, j, touch
   DIM AS LONG ub: ub = UBOUND(__fzxBody)
@@ -146,16 +210,13 @@ SUB gravitizeEverthing
       IF __fzxBody(i).enable AND __fzxBody(i).objectHash <> 0 AND __fzxBody(j).enable AND __fzxBody(j).objectHash <> 0 AND i <> j THEN
 
         dist = fzxVector2DDistance(__fzxBody(i).fzx.position, __fzxBody(j).fzx.position)
-        gv = (cGRAVCONST * ((__fzxBody(i).fzx.mass * __fzxBody(j).fzx.mass) / (dist * dist)))
+        gv = gravity(__fzxBody(i).fzx.mass, __fzxBody(j).fzx.mass, dist)
 
         fzxVector2DSubVectorND v1, __fzxBody(i).fzx.position, __fzxBody(j).fzx.position
         fzxVector2DNormalize v1
-
-        __fzxBody(i).fzx.force.x = __fzxBody(i).fzx.force.x - (gv * v1.x)
-        __fzxBody(i).fzx.force.y = __fzxBody(i).fzx.force.y - (gv * v1.y)
+        fzxVector2DAddVectorScalar __fzxBody(i).fzx.force, v1, -gv
       END IF
-      j = j + 1
-    LOOP
+    j = j + 1: LOOP
 
     ' Bodies can absorb each other
     touch = fzxIsBodyTouching(i) ' Who's touching me?
@@ -172,9 +233,7 @@ SUB gravitizeEverthing
         fzxBodyDelete i, 0
       END IF
     END IF
-    i = i + 1
-  LOOP
-
+  i = i + 1: LOOP
 END SUB
 
 FUNCTION addCircles# (r1 AS DOUBLE, r2 AS DOUBLE)
@@ -203,34 +262,35 @@ SUB renderBodies STATIC
           renderWireFramePoly i
         END IF
       END IF
-      'Draw trails
-      IF skipCount MOD 10 = 0 THEN ' dont add trails every cycle
-        ' add a trail to the buffer
+      IF NOT pause THEN
+        'Add trail dot to stack
+        IF skipCount MOD 20 = 0 THEN ' dont add trails every cycle
+          ' add a trail to the buffer
+          j = 0: DO WHILE j <= UBOUND(trail)
+            IF trail(j).t = 0 THEN
+              trail(j).t = TIMER + 10
+              trail(j).xy = __fzxBody(i).fzx.position
+              trail(j).c = _RGB32(205, 194, 50)
+              EXIT DO
+            END IF
+          j = j + 1: LOOP
+
+        END IF
+        ' Draw trail dots
         j = 0: DO WHILE j <= UBOUND(trail)
-          IF trail(j).t = 0 THEN
-            trail(j).t = TIMER + 5
-            trail(j).xy = __fzxBody(i).fzx.position
-            trail(j).c = _RGB32(205, 194, 50)
-            EXIT DO
+          IF trail(j).t > 0 THEN
+            fzxWorldToCameraEx trail(j).xy, tempV
+            PSET (tempV.x, tempV.y), trail(j).c
+            time = TIMER
+            fade = fzxImpulseClamp(0, 1, (trail(j).t - time) / 3.00)
+            trail(j).c = _RGB32(INT(_RED(trail(j).c) * fade), INT(_GREEN(trail(j).c) * fade), INT(_BLUE(trail(j).c) * fade))
+            ' Eliminate expired trail dots
+            IF TIMER > trail(j).t AND NOT pause THEN trail(j).t = 0
           END IF
         j = j + 1: LOOP
 
       END IF
-      ' Draw trail dots
-      j = 0: DO WHILE j <= UBOUND(trail)
-        IF trail(j).t > 0 THEN
-          fzxWorldToCameraEx trail(j).xy, tempV
-          PSET (tempV.x, tempV.y), trail(j).c
-          time = TIMER
-          fade = fzxImpulseClamp(0, 1, (trail(j).t - time) / 3.00)
-          trail(j).c = _RGB32(INT(_RED(trail(j).c) * fade), INT(_GREEN(trail(j).c) * fade), INT(_BLUE(trail(j).c) * fade))
-          ' Eliminate expired trail dots
-          IF TIMER > trail(j).t THEN trail(j).t = 0
-        END IF
-      j = j + 1: LOOP
-
     END IF
-
 
     i = i + 1
   LOOP

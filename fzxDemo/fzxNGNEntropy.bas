@@ -15,9 +15,8 @@ _TITLE "fzxNGN Entropy"
 
 SCREEN _NEWIMAGE(800, 1000, 32)
 
-DIM AS LONG iterations: iterations = 100
-DIM SHARED AS DOUBLE dt: dt = 1 / 120
-
+__fzxWorld.deltaTime = 1 / 120
+__fzxWorld.iterations = 100
 
 '**********************************************************************************************
 ' Build the playfield
@@ -40,7 +39,7 @@ DO
 
   fzxHandleInputDevice
   animateScene
-  fzxImpulseStep dt, iterations
+  fzxImpulseStep
   renderBodies
   'LOCATE 1: PRINT USING "MX:#####.# MY:#####.#"; __fzxInputDevice.mouse.worldPosition.x; __fzxInputDevice.mouse.worldPosition.y
 
@@ -141,7 +140,7 @@ SUB buildScene
   ' Some math used on the impulse side
   ' Todo: move this elsewhere
   DIM o AS tFZX_VECTOR2d
-  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
+  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, __fzxWorld.deltaTime
   __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
 
   '********************************************************

@@ -27,10 +27,10 @@ fzxFSMChangeState mainMenu, cFSM_GAMEMODE_IDLE
 
 SCREEN _NEWIMAGE(1024, 768, 32)
 
-DIM SHARED AS LONG iterations: iterations = 100
 DIM SHARED AS LONG dtDivisor: dtDivisor = 240
-DIM SHARED AS DOUBLE dt: dt = 1 / dtDivisor
 
+__fzxWorld.iterations = 100
+__fzxWorld.deltaTime = 1 / dtDivisor
 
 '**********************************************************************************************
 ' This is the main loop
@@ -102,24 +102,24 @@ DO
           fzxFSMChangeState mainMenu, cFSM_GAMEMODE_MAIN_OPTIONS_LOOP
       END SELECT
       dtDivisor = fzxImpulseClamp(10, 240, dtDivisor)
-      dt = 1 / dtDivisor
+      __fzxWorld.deltaTime = 1 / dtDivisor
       animateSplash
     CASE cFSM_GAMEMODE_ITERATIONS_LOOP
       CLS
       LOCATE 20, 50: PRINT "         Iterations"
       LOCATE 22, 50: PRINT "Use arrow ("; CHR$(24); CHR$(25); ") keys to adjust"
       LOCATE 23, 50: PRINT "(ESC) key to go back to options menu"
-      LOCATE 24, 50: PRINT USING "       #####"; iterations
+      LOCATE 24, 50: PRINT USING "       #####"; __fzxWorld.iterations
 
       SELECT CASE __fzxInputDevice.keyboard.keyHit
         CASE 18432 ' Up
-          iterations = iterations + 1
+          __fzxWorld.iterations = __fzxWorld.iterations + 1
         CASE 20480 ' Down
-          iterations = iterations - 1
+          __fzxWorld.iterations = __fzxWorld.iterations - 1
         CASE 27
           fzxFSMChangeState mainMenu, cFSM_GAMEMODE_MAIN_OPTIONS_LOOP
       END SELECT
-      iterations = fzxImpulseClamp(1, 10000, iterations)
+      __fzxWorld.iterations = fzxImpulseClamp(1, 10000, __fzxWorld.iterations)
       animateSplash
     CASE cFSM_GAMEMODE_GAMEPLAY_INITIALIZE
       '********************************
@@ -130,7 +130,7 @@ DO
       fzxFSMChangeState mainMenu, cFSM_GAMEMODE_GAMEPLAY_LOOP
     CASE cFSM_GAMEMODE_GAMEPLAY_LOOP
       animatescene
-      fzxImpulseStep dt, iterations
+      fzxImpulseStep
       CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
       renderBodies
       IF __fzxInputDevice.keyboard.keyHit = 27 THEN
@@ -205,7 +205,7 @@ SUB buildScene
   ' Some math used on the impulse side
   ' Todo: move this elsewhere
   DIM o AS tFZX_VECTOR2d
-  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
+  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, __fzxWorld.deltaTime
   __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
 
   '********************************************************
@@ -279,7 +279,7 @@ SUB buildSplash
   ' Some math used on the impulse side
   ' Todo: move this elsewhere
   DIM o AS tFZX_VECTOR2d
-  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, dt
+  fzxVector2DMultiplyScalarND o, __fzxWorld.gravity, __fzxWorld.deltaTime
   __fzxWorld.resting = fzxVector2DLengthSq(o) + cFZX_EPSILON
 
   '********************************************************
@@ -311,7 +311,7 @@ SUB animateSplash
     ' Bodies wont live forever
     fzxSetBody cFZX_PARAMETER_LIFETIME, temp, 20, 0
   END IF
-  fzxImpulseStep dt, iterations
+  fzxImpulseStep
   renderBodies
 END SUB
 

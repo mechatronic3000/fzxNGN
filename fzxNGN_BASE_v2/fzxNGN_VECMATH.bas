@@ -1,5 +1,6 @@
 '$include:'fzxNGN_ini.bas'
-'
+'$include:'fzxNGN_IMPULSEMATH.bas'
+'$include:'fzxNGN_SCALARMATH.bas'
 $IF FZXVECMATHINCLUDE = UNDEFINED THEN
   $LET FZXVECMATHINCLUDE = TRUE
   '**********************************************************************************************
