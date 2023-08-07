@@ -423,10 +423,10 @@ $IF FZXINIINCLUDE = UNDEFINED THEN
   '   Setup World with default values
   '********************************************************
 
-  __fzxWorld.minusLimit.x = -200000
-  __fzxWorld.minusLimit.y = -200000
-  __fzxWorld.plusLimit.x = 200000
-  __fzxWorld.plusLimit.y = 200000
+  __fzxWorld.minusLimit.x = -20000
+  __fzxWorld.minusLimit.y = -20000
+  __fzxWorld.plusLimit.x = 20000
+  __fzxWorld.plusLimit.y = 20000
 
   __fzxWorld.spawn.x = 0
   __fzxWorld.spawn.y = 0
