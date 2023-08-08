@@ -25,10 +25,16 @@ DO
   fzxHandleInputDevice
   animatescene
   fzxImpulseStep
+<<<<<<< Updated upstream
   CLS: LOCATE 1, 10: PRINT "Click the mouse on the playfield to spawn an object"
   LOCATE 2, 10: PRINT "Throw objects by moving the mouse and releasing the left mose button"
   LOCATE 1, 1: PRINT USING "FPS:###"; __fzxStats.fps
   LOCATE 3, 1: PRINT USING "Number of objects:####"; __fzxStats.numberOfBodies
+=======
+  CLS: LOCATE 1: PRINT "Click the mouse on the playfield to spawn an object"
+  LOCATE 2: PRINT "Throw objects by moving the mouse and releasing the left mose button"
+  LOCATE 3: PRINT USING "Number of Bodies:#### Number of Static Bodies:####"; __fzxStats.numberOfBodies; __fzxStats.numberOfStaticBodies
+>>>>>>> Stashed changes
   renderBodies
   fzxHandleFPSMain
   _LIMIT 60
