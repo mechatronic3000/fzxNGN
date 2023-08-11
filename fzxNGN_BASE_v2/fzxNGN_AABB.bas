@@ -24,9 +24,4 @@ $IF FZXFZXAABBINCLUDE = UNDEFINED THEN
     fzxAABBOverlapObjects = fzxAABBOverlap(am.x, am.y, (mam.x * 2), (mam.y * 2), bm.x, bm.y, (mbm.x * 2), (mbm.y * 2))
   END FUNCTION
 
-  'FUNCTION fzxAABBOverlapObjectCamera (body() AS tFZX_BODY, cam AS tFZX_CAMERA, a AS LONG)
-  '  DIM AS tFZX_VECTOR2d winUpLeft
-  '  fzxVector2DNegND winUpLeft, cam.fov
-
-  'END FUNCTION
 $END IF
