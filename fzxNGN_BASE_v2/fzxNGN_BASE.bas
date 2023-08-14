@@ -238,9 +238,11 @@ SUB fzxPolyCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS LON
 
   __fzxBody(index).shape.maxDimension.x = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
   __fzxBody(index).shape.maxDimension.y = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
-
+  ' divide 360 degrees by the number of sides
   FOR theta = 0 TO 359 STEP (360 / sides)
+    ' calculate the points in the radius of a circle and add that to the verts() array
     fzxVector2DSet verts(vertCount), sizex * COS(_D2R(theta)), sizey * SIN(_D2R(theta))
+    ' increment verts array index
     vertCount = vertCount + 1
   NEXT
   fzxVertexSet index, verts()
