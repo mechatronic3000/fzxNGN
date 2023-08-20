@@ -35,9 +35,6 @@ SCREEN _NEWIMAGE(1024, 768, 32)
 fzxInitFPS
 fzxFSMChangeState glMode, cFSM_GLMODE_IDLE
 
-'DIM AS LONG iterations: iterations = 2
-'DIM SHARED AS DOUBLE dt: dt = 1 / 60
-
 __fzxWorld.iterations = 2
 
 '**********************************************************************************************
@@ -203,14 +200,12 @@ SUB buildScene (game AS tGAME)
 
   'Attach Wheel2 to Body
   temp = fzxJointCreate(game.player, game.wheel2, __fzxBody(game.wheel2).fzx.position.x, __fzxBody(game.wheel2).fzx.position.y)
-
   __fzxJoints(temp).softness = 0.00007
   __fzxJoints(temp).biasFactor = 500
 
 
   'Build and attach Drivers Head
   game.head = fzxCreateCircleBodyEx("head", 50)
-
   fzxSetBody cFZX_PARAMETER_TEXTURE, game.head, 7, 0
   fzxSetBody cFZX_PARAMETER_POSITION, game.head, __fzxBody(game.player).fzx.position.x - 25, __fzxBody(game.player).fzx.position.y - 125
   fzxSetBody cFZX_PARAMETER_COLLISIONMASK, game.head, 4, 0
@@ -295,7 +290,6 @@ SUB buildScene (game AS tGAME)
 
     'Ramp 1
     game.loopramp1 = fzxCreateBoxBodyEx("cSCENE_LOOPRAMP_1", cLOOP_RAMPWIDTH, cLOOP_RAMPHEIGHT)
-
     fzxSetBodyEx cFZX_PARAMETER_POSITION, "cSCENE_LOOPRAMP_1", cLOOP_CENTER_X + 250, cLOOP_CENTER_Y - 200
     fzxSetBodyEx cFZX_PARAMETER_TEXTURE, "cSCENE_LOOPRAMP_1", 4, 0
     fzxSetBodyEx cFZX_PARAMETER_STATIC, "cSCENE_LOOPRAMP_1", 0, 0
@@ -306,7 +300,6 @@ SUB buildScene (game AS tGAME)
 
     'Ramp 2
     game.loopramp2 = fzxCreateBoxBodyEx("cSCENE_LOOPRAMP_2", cLOOP_RAMPWIDTH, cLOOP_RAMPHEIGHT)
-
     fzxSetBodyEx cFZX_PARAMETER_POSITION, "cSCENE_LOOPRAMP_2", cLOOP_CENTER_X + cLOOP_RAMPWIDTH + 250, cLOOP_CENTER_Y - 200
     fzxSetBodyEx cFZX_PARAMETER_TEXTURE, "cSCENE_LOOPRAMP_2", 4, 0
     fzxSetBodyEx cFZX_PARAMETER_STATIC, "cSCENE_LOOPRAMP_2", 0, 0
@@ -491,19 +484,16 @@ SUB renderJoints (index AS LONG)
   fzxVector2DSet o2, 0, 0
   fzxWorldToCameraEx __fzxBody(__fzxJoints(index).body1).fzx.position, o1
   fzxWorldToCameraEx __fzxBody(__fzxJoints(index).body2).fzx.position, o2
-
   glDrawLine o1, o2, __fzxJoints(index).wireframe_color, 5
 END SUB
 
 SUB renderWireFrameCircle (index AS LONG, c AS LONG)
   DIM AS tFZX_VECTOR2d o1, o2
-
   fzxWorldToCameraEx __fzxBody(index).fzx.position, o1
   glDrawCircle o1.x, o1.y, __fzxBody(index).shape.radius * __fzxCamera.zoom, c, 12
   o2.x = o1.x + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * COS(__fzxBody(index).fzx.orient)
   o2.y = o1.y + (__fzxBody(index).shape.radius * __fzxCamera.zoom) * SIN(__fzxBody(index).fzx.orient)
   glDrawLine o1, o2, c, 1
-
 END SUB
 
 SUB renderWireFramePoly (index AS LONG)
@@ -587,7 +577,6 @@ SUB renderTexturedBox (index AS INTEGER)
   fzxVector2DMultiplyVector vert(3), __fzxBody(index).shape.scaleTexture
   fzxWorldToCamera index, vert(3)
 
-  'glDrawTexturedQuad textures(__fzxBody(index).shape.texture).glText, vert(1), vert(2), vert(3), vert(0)
   glDrawTexturedQuad __fzxBody(index).shape, vert(1), vert(2), vert(3), vert(0)
 END SUB
 
