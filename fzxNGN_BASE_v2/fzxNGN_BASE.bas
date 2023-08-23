@@ -12,6 +12,13 @@ OPTION _EXPLICIT
 '$include:'fzxNGN_INPUT.bas'
 '$include:'fzxNGN_CAMERA.bas'
 '$include:'fzxNGN_XML.bas'
+'$include:'fzxNGN_FSM.bas'
+'$include:'fzxNGN_FPS.bas'
+'$include:'fzxNGN_NETWORK.bas'
+'$include:'fzxNGN_STRING_ARRAY.bas'
+'$include:'fzxNGN_HASH.bas'
+'$include:'fzxNGN_BODY_MANAGEMENT.bas'
+'$include:'fzxNGN_JOINT_MANAGEMENT.bas'
 
 '**********************************************************************************************
 '   Physics code ported from RandyGaul's Impulse Engine
@@ -225,6 +232,20 @@ FUNCTION fzxCreatePolyBodyTest (objName AS STRING, xs AS DOUBLE, ys AS DOUBLE, s
   fzxCreatePolyBodyTest = index
 END FUNCTION
 
+SUB fzxBoxCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE)
+  DIM vertlength AS LONG: vertlength = 3
+  DIM verts(0 TO vertlength) AS tFZX_VECTOR2d
+
+  __fzxBody(index).shape.maxDimension.x = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
+  __fzxBody(index).shape.maxDimension.y = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
+
+  fzxVector2DSet verts(0), -sizex, -sizey
+  fzxVector2DSet verts(1), sizex, -sizey
+  fzxVector2DSet verts(2), sizex, sizey
+  fzxVector2DSet verts(3), -sizex, sizey
+
+  fzxVertexSet index, verts()
+END SUB
 
 
 SUB fzxPolyCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS LONG)
@@ -267,53 +288,6 @@ SUB fzxPolyCreateTest (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, sides AS
     vertCount = vertCount + 1
   NEXT
   fzxVertexSetTest index, verts()
-END SUB
-
-SUB fzxBodyCreate (index AS LONG, shape AS tFZX_SHAPE)
-  fzxVector2DSet __fzxBody(index).fzx.position, 0, 0
-  fzxVector2DSet __fzxBody(index).fzx.velocity, 0, 0
-  __fzxBody(index).fzx.angularVelocity = 0.0
-  __fzxBody(index).fzx.torque = 0.0
-  __fzxBody(index).fzx.orient = 0.0
-
-  fzxVector2DSet __fzxBody(index).fzx.force, 0, 0
-  __fzxBody(index).fzx.staticFriction = 0.5
-  __fzxBody(index).fzx.dynamicFriction = 0.3
-  __fzxBody(index).fzx.restitution = 0.2
-  __fzxBody(index).shape = shape
-  __fzxBody(index).shape.vert = _MEMNEW(cMAXVERTSPERBODY * 16) ' x and y for a total of 16 bytes
-  __fzxBody(index).shape.norm = _MEMNEW(cMAXVERTSPERBODY * 16)
-  __fzxBody(index).shape.repeatTexture.x = 1
-  __fzxBody(index).shape.repeatTexture.y = 1
-
-  __fzxBody(index).collisionMask = 255
-  __fzxBody(index).enable = 1
-  __fzxBody(index).noPhysics = 0
-  __fzxBody(index).lifetime.start = TIMER(.001)
-  __fzxBody(index).lifetime.duration = 0
-  __fzxBody(index).zPosition = 0.01
-END SUB
-
-SUB fzxBodyCreateEx (objname AS STRING, shape AS tFZX_SHAPE, index AS LONG)
-  index = fzxBodyManagerAdd
-  __fzxBody(index).objectName = objname
-  __fzxBody(index).objectHash = fzxComputeHash&&(objname)
-  fzxBodyCreate index, shape
-END SUB
-
-SUB fzxBoxCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE)
-  DIM vertlength AS LONG: vertlength = 3
-  DIM verts(0 TO vertlength) AS tFZX_VECTOR2d
-
-  __fzxBody(index).shape.maxDimension.x = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
-  __fzxBody(index).shape.maxDimension.y = fzxScalarMax(sizex, sizey) * cFZX_AABB_TOLERANCE
-
-  fzxVector2DSet verts(0), -sizex, -sizey
-  fzxVector2DSet verts(1), sizex, -sizey
-  fzxVector2DSet verts(2), sizex, sizey
-  fzxVector2DSet verts(3), -sizex, sizey
-
-  fzxVertexSet index, verts()
 END SUB
 
 SUB fzxTrapCreate (index AS LONG, sizex AS DOUBLE, sizey AS DOUBLE, yOff1 AS DOUBLE, yOff2 AS DOUBLE)
@@ -497,47 +471,6 @@ SUB fzxVertexSetTest (index AS LONG, verts() AS tFZX_VECTOR2d)
 
 END SUB
 
-SUB fzxBodyClear
-  DIM AS LONG iter
-  iter = 0: DO WHILE iter <= UBOUND(__fzxBody)
-    fzxBodyDelete iter, 0
-  iter = iter + 1: LOOP
-END SUB
-
-SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
-  DIM AS LONG iter
-  IF index >= 0 AND index <= UBOUND(__fzxBody) THEN
-
-    IF _MEMEXISTS(__fzxBody(index).shape.vert) THEN _MEMFREE __fzxBody(index).shape.vert
-    IF _MEMEXISTS(__fzxBody(index).shape.norm) THEN _MEMFREE __fzxBody(index).shape.norm
-
-    'remove any joints that are attached to it
-    iter = 0: DO
-      IF __fzxJoints(iter).body1 = index OR __fzxJoints(iter).body2 = index THEN
-        fzxJointDelete iter
-      END IF
-    iter = iter + 1: LOOP WHILE iter <= UBOUND(__fzxJoints)
-
-    IF NOT perm THEN
-      __fzxBody(index).enable = 0
-      __fzxBody(index).overwrite = 1
-      __fzxBody(index).objectName = ""
-      __fzxBody(index).objectHash = 0
-    ELSE
-      'remove the bodys attached to it
-      iter = index: DO
-        __fzxBody(iter) = __fzxBody(iter + 1)
-      iter = iter + 1: LOOP WHILE iter < UBOUND(__fzxBody)
-      REDIM _PRESERVE __fzxBody(0 TO UBOUND(__fzxBody) - 1) AS tFZX_BODY
-
-      'fix all the joints bodies after the index since then all the bodies are shifted toward zero index
-      iter = 0: DO
-        IF __fzxJoints(iter).body1 >= index THEN __fzxJoints(iter).body1 = __fzxJoints(iter).body1 - 1
-        IF __fzxJoints(iter).body2 >= index THEN __fzxJoints(iter).body2 = __fzxJoints(iter).body2 - 1
-      iter = iter + 1: LOOP WHILE iter <= UBOUND(__fzxJoints)
-    END IF
-  END IF
-END SUB
 
 FUNCTION fzxFindRightMostVert (verts() AS tFZX_VECTOR2d)
   DIM AS DOUBLE x, rightmost, highestXCoord
@@ -808,12 +741,6 @@ FUNCTION fzxBodyAtRest (index AS LONG, minVel AS DOUBLE)
   fzxBodyAtRest = (__fzxBody(index).fzx.velocity.x < minVel AND __fzxBody(index).fzx.velocity.x > -minVel AND __fzxBody(index).fzx.velocity.y < minVel AND __fzxBody(index).fzx.velocity.y > -minVel)
 END FUNCTION
 
-SUB fzxCopyBodies (body() AS tFZX_BODY, newBody() AS tFZX_BODY)
-  DIM AS LONG index
-  FOR index = 0 TO UBOUND(body)
-    newBody(index) = body(index)
-  NEXT
-END SUB
 
 '**********************************************************************************************
 '   Misc
@@ -1531,136 +1458,6 @@ SUB fzxManifoldInfiniteMassCorrection (A AS LONG, B AS LONG)
   fzxVector2DSet __fzxBody(B).fzx.velocity, 0, 0
 END SUB
 
-'**********************************************************************************************
-'   Joint Creation
-'**********************************************************************************************
-SUB _______________JOINT_CREATION_FUNCTIONS: END SUB
-
-FUNCTION fzxJointAllocate
-  DIM AS LONG iter, uB, uBTemp
-  ' Set uB to -1 to signal if the following code is unsuccessful at find
-  ' an available joint to overwrite then allocate more space
-  uB = -1
-
-  iter = 0: DO WHILE iter <= UBOUND(__fzxJoints)
-    IF __fzxJoints(iter).overwrite = 1 THEN
-      fzxJointAllocate = iter
-      EXIT FUNCTION
-    END IF
-  iter = iter + 1: LOOP
-
-  ' If uB is still -1 then we need to allocate more array space
-  ' If uB >= 0 then it found an element to overwrite and returns this value.
-  IF uB < 0 THEN
-    ' uBTemp should be the next element in the newly allocated array
-    uBTemp = UBOUND(__fzxJoints) + 1
-    ' Add 10 more elements to the __fzxJoints array, while preserving the contents
-    REDIM _PRESERVE __fzxJoints(0 TO UBOUND(__fzxJoints) + 10) AS tFZX_JOINT
-    ' uB is the size of the newly expanded array
-    uB = UBOUND(__fzxJoints)
-    ' Mark all of the newly created elements to be overwritten
-    iter = uBTemp: DO WHILE iter <= uB
-      __fzxJoints(iter).overwrite = 1
-    iter = iter + 1: LOOP
-    ' Set uB to then first element available in the newly expanded array.
-    uB = uBTemp
-  END IF
-  fzxJointAllocate = uB
-END FUNCTION
-
-FUNCTION fzxJointCreate (b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
-  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT FUNCTION
-  DIM AS LONG tempJ: tempJ = fzxJointAllocate
-
-  fzxJointSet tempJ, b1, b2, x, y
-  'Joint name will default to a combination of the two objects that is connects.
-  'If you change it you must also recompute the hash.
-  __fzxJoints(tempJ).jointName = _TRIM$(__fzxBody(b1).objectName) + "_" + _TRIM$(__fzxBody(b2).objectName)
-  __fzxJoints(tempJ).jointHash = fzxComputeHash&&(__fzxJoints(tempJ).jointName)
-  __fzxJoints(tempJ).wireframe_color = _RGB32(255, 227, 127)
-  fzxJointCreate = tempJ
-END FUNCTION
-
-FUNCTION fzxJointCreateEx (b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anchor2 AS tFZX_VECTOR2d)
-  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT FUNCTION
-  DIM AS LONG tempJ: tempJ = fzxJointAllocate
-
-  fzxJointSetEx tempJ, b1, b2, anchor1, anchor2
-  'Joint name will default to a combination of the two objects that is connects.
-  'If you change it you must also recompute the hash.
-  __fzxJoints(tempJ).jointName = _TRIM$(__fzxBody(b1).objectName) + "_" + _TRIM$(__fzxBody(b2).objectName)
-  __fzxJoints(tempJ).jointHash = fzxComputeHash&&(__fzxJoints(tempJ).jointName)
-  __fzxJoints(tempJ).wireframe_color = _RGB32(255, 227, 127)
-  fzxJointCreateEx = tempJ
-END FUNCTION
-
-SUB fzxJointClear
-  DIM AS LONG iter
-  iter = 0: DO WHILE iter <= UBOUND(__fzxJoints)
-    fzxJointDelete iter
-  iter = iter + 1: LOOP
-END SUB
-
-SUB fzxJointDelete (d AS LONG)
-  IF d >= 0 AND d <= UBOUND(__fzxJoints) THEN
-    __fzxJoints(d).overwrite = 1
-    __fzxJoints(d).jointName = ""
-    __fzxJoints(d).jointHash = 0
-  END IF
-END SUB
-
-SUB fzxJointSet (index AS LONG, b1 AS LONG, b2 AS LONG, x AS DOUBLE, y AS DOUBLE)
-  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT SUB
-  DIM anchor AS tFZX_VECTOR2d
-  fzxVector2DSet anchor, x, y
-  DIM Rot1 AS tFZX_MATRIX2D: Rot1 = __fzxBody(b1).shape.u
-  DIM Rot2 AS tFZX_MATRIX2D: Rot2 = __fzxBody(b2).shape.u
-  DIM Rot1T AS tFZX_MATRIX2D: fzxMatrix2x2Transpose Rot1, Rot1T
-  DIM Rot2T AS tFZX_MATRIX2D: fzxMatrix2x2Transpose Rot2, Rot2T
-  DIM tv AS tFZX_VECTOR2d
-
-  __fzxJoints(index).body1 = b1
-  __fzxJoints(index).body2 = b2
-
-  fzxVector2DSubVectorND tv, anchor, __fzxBody(b1).fzx.position
-  fzxMatrix2x2MultiplyVector Rot1T, tv, __fzxJoints(index).localAnchor1
-
-  fzxVector2DSubVectorND tv, anchor, __fzxBody(b2).fzx.position
-  fzxMatrix2x2MultiplyVector Rot2T, tv, __fzxJoints(index).localAnchor2
-
-  fzxVector2DSet __fzxJoints(index).P, 0, 0
-  ' Some default Settings
-  __fzxJoints(index).softness = 0.001
-  __fzxJoints(index).biasFactor = 1000
-  __fzxJoints(index).max_bias = -1
-  __fzxJoints(index).overwrite = 0
-END SUB
-
-SUB fzxJointSetEx (index AS LONG, b1 AS LONG, b2 AS LONG, anchor1 AS tFZX_VECTOR2d, anchor2 AS tFZX_VECTOR2d)
-  IF b1 < 0 OR b1 > UBOUND(__fzxBody) OR b2 < 0 OR b2 > UBOUND(__fzxBody) THEN EXIT SUB
-  DIM Rot1 AS tFZX_MATRIX2D: Rot1 = __fzxBody(b1).shape.u
-  DIM Rot2 AS tFZX_MATRIX2D: Rot2 = __fzxBody(b2).shape.u
-  DIM Rot1T AS tFZX_MATRIX2D: fzxMatrix2x2Transpose Rot1, Rot1T
-  DIM Rot2T AS tFZX_MATRIX2D: fzxMatrix2x2Transpose Rot2, Rot2T
-  DIM tv AS tFZX_VECTOR2d
-
-  __fzxJoints(index).body1 = b1
-  __fzxJoints(index).body2 = b2
-
-  fzxVector2DSubVectorND tv, anchor1, __fzxBody(b1).fzx.position
-  fzxMatrix2x2MultiplyVector Rot1T, tv, __fzxJoints(index).localAnchor1
-
-  fzxVector2DSubVectorND tv, anchor2, __fzxBody(b2).fzx.position
-  fzxMatrix2x2MultiplyVector Rot2T, tv, __fzxJoints(index).localAnchor2
-
-  fzxVector2DSet __fzxJoints(index).P, 0, 0
-  ' Some default Settings
-  __fzxJoints(index).softness = 0.0001
-  __fzxJoints(index).biasFactor = 1000
-  __fzxJoints(index).max_bias = -1
-  __fzxJoints(index).overwrite = 0
-END SUB
-
 
 '**********************************************************************************************
 '   Joint Calculations
@@ -1819,272 +1616,5 @@ FUNCTION fzxHighestCollisionVelocity (hits() AS tFZX_HIT, A AS LONG) ' this func
   hitcount = hitcount + 1: LOOP
   fzxHighestCollisionVelocity = hiCv
 END FUNCTION
-
-'**********************************************************************************************
-'   Body Managment Tools
-'**********************************************************************************************
-SUB _______________BODY_MANAGEMENT: END SUB
-
-FUNCTION fzxBodyManagerAdd ()
-  DIM AS LONG ub, iter, tempUb
-  ub = UBOUND(__fzxBody)
-  ' Check for any available bodies to be overwritten
-  iter = 0: DO WHILE iter <= ub
-    IF __fzxBody(iter).overwrite THEN
-      fzxBodyManagerAdd = iter
-      __fzxBody(iter).overwrite = 0
-      EXIT FUNCTION
-    END IF
-  iter = iter + 1: LOOP
-
-
-  ' Prepare the the newly added elements in the array for overwrite
-  tempUb = ub + 1
-  ' Add more bodies
-  REDIM _PRESERVE __fzxBody(0 TO ub + 10) AS tFZX_BODY
-  ub = UBOUND(__fzxBody)
-  ' mark these to be overwritten
-  iter = tempUb: DO WHILE iter <= ub
-    __fzxBody(iter).overwrite = 1
-  iter = iter + 1: LOOP
-
-  __fzxBody(tempUb).overwrite = 0
-  fzxBodyManagerAdd = tempUb
-END FUNCTION
-
-FUNCTION fzxBodyWithHash (hash AS _INTEGER64)
-  DIM AS LONG i
-  fzxBodyWithHash = -1
-  FOR i = 0 TO UBOUND(__fzxBody)
-    IF __fzxBody(i).objectHash = hash THEN
-      fzxBodyWithHash = i
-      EXIT FUNCTION
-    END IF
-  NEXT
-END FUNCTION
-
-FUNCTION fzxBodyWithHashMask (hash AS _INTEGER64, mask AS LONG)
-  DIM AS LONG i
-  fzxBodyWithHashMask = -1
-  FOR i = 0 TO UBOUND(__fzxBody)
-    IF (__fzxBody(i).objectHash AND mask) = (hash AND mask) THEN
-      fzxBodyWithHashMask = i
-      EXIT FUNCTION
-    END IF
-  NEXT
-END FUNCTION
-
-FUNCTION fzxBodyManagerID (objName AS STRING)
-  DIM i AS LONG
-  DIM uID AS _INTEGER64
-  uID = fzxComputeHash(_TRIM$(objName))
-  fzxBodyManagerID = -1
-
-  FOR i = 0 TO UBOUND(__fzxBody)
-    IF __fzxBody(i).objectHash = uID THEN
-      fzxBodyManagerID = i
-      EXIT FUNCTION
-    END IF
-  NEXT
-END FUNCTION
-
-FUNCTION fzxBodyContainsString (start AS LONG, s AS STRING)
-  fzxBodyContainsString = -1
-  DIM AS LONG j
-  FOR j = start TO UBOUND(__fzxBody)
-    IF INSTR(__fzxBody(j).objectName, s) THEN
-      fzxBodyContainsString = j
-      EXIT FUNCTION
-    END IF
-  NEXT
-END FUNCTION
-
-'**********************************************************************************************
-'   String Hash
-'**********************************************************************************************
-SUB _______________GENERAL_STRING_HASH: END SUB
-FUNCTION fzxComputeHash&& (s AS STRING)
-  DIM p, i AS LONG: p = 31
-  DIM m AS _INTEGER64: m = 1E9 + 9
-  DIM AS _INTEGER64 hash_value, p_pow
-  p_pow = 1
-  FOR i = 1 TO LEN(s)
-    hash_value = (hash_value + (ASC(MID$(s, i)) - 97 + 1) * p_pow)
-    p_pow = (p_pow * p) MOD m
-  NEXT
-  fzxComputeHash = hash_value
-END FUNCTION
-'**********************************************************************************************
-'   Network Related Tools
-'**********************************************************************************************
-
-SUB _______________NETWORK_FUNCTIONALITY: END SUB
-SUB fzxHandleNetwork (net AS tFZX_NETWORK)
-  IF net.SorC = cFZX_NET_SERVER THEN
-    IF net.HCHandle = 0 THEN
-      fzxNetworkStartHost net
-    END IF
-    fzxNetworkTransmit net
-  END IF
-
-  IF net.SorC = cFZX_NET_CLIENT THEN
-    fzxNetworkReceiveFromHost net
-  END IF
-END SUB
-
-SUB fzxNetworkStartHost (net AS tFZX_NETWORK)
-  DIM connection AS STRING
-  connection = RTRIM$(net.protocol) + ":" + LTRIM$(STR$(net.port))
-  net.HCHandle = _OPENHOST(connection)
-END SUB
-
-SUB fzxNetworkReceiveFromHost (net AS tFZX_NETWORK)
-  DIM connection AS STRING
-  DIM AS LONG timeout
-  connection = RTRIM$(net.protocol) + ":" + LTRIM$(STR$(net.port)) + ":" + RTRIM$(net.address)
-  net.HCHandle = _OPENCLIENT(connection)
-  timeout = TIMER
-  IF net.HCHandle THEN
-    DO
-      GET #net.HCHandle, , __fzxBody()
-      IF TIMER - timeout > 5 THEN EXIT DO ' 5 sec time out
-    LOOP UNTIL EOF(net.HCHandle) = 0
-    fzxNetworkClose net
-  END IF
-END SUB
-
-SUB fzxNetworkTransmit (net AS tFZX_NETWORK)
-  IF net.HCHandle <> 0 THEN
-    net.connectionHandle = _OPENCONNECTION(net.HCHandle)
-    IF net.connectionHandle <> 0 THEN
-      PUT #net.connectionHandle, , __fzxBody()
-      CLOSE net.connectionHandle
-    END IF
-  END IF
-END SUB
-
-SUB fzxNetworkClose (net AS tFZX_NETWORK)
-  IF net.HCHandle <> 0 THEN
-    CLOSE net.HCHandle
-    net.HCHandle = 0
-  END IF
-END SUB
-
-'**********************************************************************************************
-'   FSM Handling
-'**********************************************************************************************
-SUB _______________FSM_HANDLING: END SUB
-
-SUB fzxFSMChangeState (fsm AS tFZX_FSM, newState AS LONG)
-  fsm.previousState = fsm.currentState
-  fsm.currentState = newState
-  fsm.timerState.start = TIMER(.001)
-END SUB
-
-SUB fzxFSMChangeStateEx (fsm AS tFZX_FSM, newState AS LONG, arg1 AS tFZX_VECTOR2d, arg2 AS tFZX_VECTOR2d, arg3 AS LONG)
-  fsm.previousState = fsm.currentState
-  fsm.currentState = newState
-  fsm.arg1 = arg1
-  fsm.arg2 = arg2
-  fsm.arg3 = arg3
-END SUB
-
-SUB fzxFSMChangeStateOnTimer (fsm AS tFZX_FSM, newstate AS LONG)
-  IF TIMER(.001) > fsm.timerState.start + fsm.timerState.duration THEN
-    fzxFSMChangeState fsm, newstate
-  END IF
-END SUB
-
-'**********************************************************************************************
-'   String Array Functions
-'**********************************************************************************************
-SUB _______________STRING_ARRAY_FUNCTIONS: END SUB
-FUNCTION fzxReadArrayLong& (s AS STRING, p AS LONG)
-  IF p > 0 AND p * 4 + 4 < LEN(s) THEN fzxReadArrayLong = CVL(MID$(s, p * 4, 4))
-END FUNCTION
-
-SUB fzxSetArrayLong (s AS STRING, p AS LONG, v AS LONG)
-  IF p > 0 AND p * 4 + 4 < LEN(s) THEN MID$(s, p * 4) = MKL$(v)
-END SUB
-
-FUNCTION fzxReadArraySingle! (s AS STRING, p AS LONG)
-  IF p > 0 AND p * 4 + 4 < LEN(s) THEN fzxReadArraySingle = CVS(MID$(s, p * 4, 4))
-END FUNCTION
-
-SUB fzxSetArraySingle (s AS STRING, p AS LONG, v AS SINGLE)
-  IF p > 0 AND p * 4 + 4 < LEN(s) THEN MID$(s, p * 4) = MKS$(v)
-END SUB
-
-FUNCTION fzxReadArrayInteger% (s AS STRING, p AS LONG)
-  IF p > 0 AND p * 2 + 2 < LEN(s) THEN fzxReadArrayInteger = CVI(MID$(s, p * 2, 2))
-END FUNCTION
-
-SUB fzxSetArrayInteger (s AS STRING, p AS LONG, v AS INTEGER)
-  IF p > 0 AND p * 2 + 2 < LEN(s) THEN MID$(s, p * 2) = MKI$(v)
-END SUB
-
-FUNCTION fzxReadArrayDouble# (s AS STRING, p AS LONG)
-  IF p > 0 AND p * 8 + 8 < LEN(s) THEN fzxReadArrayDouble = CVL(MID$(s, p * 8, 8))
-END FUNCTION
-
-SUB fzxSetArrayDouble (s AS STRING, p AS LONG, v AS DOUBLE)
-  IF p > 0 AND p * 8 + 8 < LEN(s) THEN MID$(s, p * 8) = MKD$(v)
-END SUB
-
-'**********************************************************************************************
-'   FPS Management
-'**********************************************************************************************
-SUB _______________FPS_MANAGEMENT: END SUB
-SUB fzxInitFPS
-  DIM timerOne AS LONG
-  timerOne = _FREETIMER
-  ON TIMER(timerOne, 1) fzxFPS
-  TIMER(timerOne) ON
-
-  'timerOne = _FREETIMER
-  'ON TIMER(timerOne, 1) fzxFPSMain
-  'TIMER(timerOne) ON
-
-  'timerOne = _FREETIMER
-  'ON TIMER(timerOne, .001) fzxFPSdt
-  'TIMER(timerOne) ON
-END SUB
-
-SUB fzxFPS
-  'DIM fpss AS STRING
-  'fpss = "   MAIN LOOP FPS:" + STR$(__fzxFPSCount.fpsLast) + "  OPENGL FPS:" + STR$(__fzxFPSCount.fpsLast1) + "   "
-  '_PRINTSTRING ((_WIDTH / 2) - (_PRINTWIDTH(fpss) / 2), 0), fpss
-  __fzxStats.fps = __fzxFPSCount.fpsLast
-  __fzxFPSCount.fpsLast = __fzxFPSCount.fpsCount
-  __fzxFPSCount.fpsCount = 0
-END SUB
-
-SUB fzxFPSMain
-  __fzxFPSCount.fpsLast1 = __fzxFPSCount.fpsCount1
-  __fzxFPSCount.fpsCount1 = 0
-END SUB
-
-SUB fzxFPSdt
-  IF __fzxFPSCount.fpsLastFine > 0 THEN
-    __fzxFPSCount.dt = 1 / (__fzxFPSCount.fpsLastFine * 100)
-  ELSE
-    __fzxFPSCount.dt = 1 / 100000
-  END IF
-
-  __fzxFPSCount.fpsLastFine = __fzxFPSCount.fpsCountFine
-  __fzxFPSCount.fpsCountFine = 0
-END SUB
-
-
-SUB fzxHandleFPSMain
-  __fzxFPSCount.fpsCount = __fzxFPSCount.fpsCount + 1
-  __fzxFPSCount.fpsCountFine = __fzxFPSCount.fpsCountFine + 1
-END SUB
-
-SUB fzxHandleFPSGL
-  __fzxFPSCount.fpsCount1 = __fzxFPSCount.fpsCount1 + 1
-END SUB
-
-
 
 
