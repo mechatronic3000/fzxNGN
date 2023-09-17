@@ -1,0 +1,30 @@
+'$include:'..\..\fzxNGN_BASE_v2\fzxNGN_ini.bas'
+'$include:'globals.bi'
+$IF DEBUGLIB = UNDEFINED THEN
+  $LET DEBUGLIB = TRUE
+  '**********************************************************************************************
+  '     Debug
+  '**********************************************************************************************
+  SUB _______________DEBUG (): END SUB
+
+  SUB __debugDumpBodies '   ;)
+    $IF DEBUG = TRUE THEN
+        DIM AS LONG i
+        i = 0: DO WHILE i <= UBOUND(__fzxBody)
+        PRINT #__logfile, i; "  objectname:"; _TRIM$(__fzxBody(i).objectName); " objecthash:"; __fzxBody(i).objectHash; "  entityid:"; __fzxBody(i).entityID
+        i = i + 1: LOOP
+    $END IF
+  END SUB
+
+  SUB __debugPrint (msg AS STRING)
+    $IF DEBUG = TRUE THEN
+        PRINT #__logfile, msg
+    $END IF
+  END SUB
+
+  SUB __debugPrintUsing (fmt AS STRING, value AS DOUBLE)
+    $IF DEBUG = TRUE THEN
+        PRINT #__logfile, USING fmt; value
+    $END IF
+  END SUB
+$END IF

@@ -41,6 +41,20 @@ $IF FZXBODYMGMTINCLUDE = UNDEFINED THEN
     iter = iter + 1: LOOP
   END SUB
 
+  SUB fzxBodyClearPerm
+    DIM AS LONG iter
+    iter = 0: DO WHILE iter <= UBOUND(__fzxBody)
+      fzxBodyDelete iter, 1
+    iter = iter + 1: LOOP
+    ERASE __fzxBody
+    REDIM AS tFZX_BODY __fzxBody(0 TO cSTARTINGNUMBEROFOBJECTS)
+    ' Mark the  bodies for overwrite
+    iter = 0: DO WHILE iter <= UBOUND(__fzxBody)
+      __fzxBody(iter).overwrite = 1
+    iter = iter + 1: LOOP
+  END SUB
+
+
   SUB fzxBodyDelete (index AS LONG, perm AS _BYTE)
     DIM AS LONG iter
     IF index >= 0 AND index <= UBOUND(__fzxBody) THEN
@@ -60,6 +74,7 @@ $IF FZXBODYMGMTINCLUDE = UNDEFINED THEN
         __fzxBody(index).overwrite = 1
         __fzxBody(index).objectName = ""
         __fzxBody(index).objectHash = 0
+        __fzxBody(index).entityID = 0
       ELSE
         'remove the bodys attached to it
         iter = index: DO
@@ -157,11 +172,11 @@ $IF FZXBODYMGMTINCLUDE = UNDEFINED THEN
     fzxBodyCreate index, shape
   END SUB
 
-SUB fzxCopyBodies (body() AS tFZX_BODY, newBody() AS tFZX_BODY)
-  DIM AS LONG index
-  FOR index = 0 TO UBOUND(body)
-    newBody(index) = body(index)
-  NEXT
-END SUB
+  SUB fzxCopyBodies (body() AS tFZX_BODY, newBody() AS tFZX_BODY)
+    DIM AS LONG index
+    FOR index = 0 TO UBOUND(body)
+      newBody(index) = body(index)
+    NEXT
+  END SUB
 
 $END IF

@@ -1,0 +1,35 @@
+$IF STRARRAYS = UNDEFINED THEN
+  $LET STRARRAYS = TRUE
+
+FUNCTION readArrayLong& (s AS STRING, p AS LONG)
+  IF p > 0 AND p * 4 + 4 < LEN(s) THEN readArrayLong = CVL(MID$(s, p * 4, 4))
+END FUNCTION
+
+SUB setArrayLong (s AS STRING, p AS LONG, v AS LONG)
+  IF p > 0 AND p * 4 + 4 < LEN(s) THEN MID$(s, p * 4) = MKL$(v)
+END SUB
+
+FUNCTION readArraySingle! (s AS STRING, p AS LONG)
+  IF p > 0 AND p * 4 + 4 < LEN(s) THEN readArraySingle = CVS(MID$(s, p * 4, 4))
+END FUNCTION
+
+SUB setArraySingle (s AS STRING, p AS LONG, v AS SINGLE)
+  IF p > 0 AND p * 4 + 4 < LEN(s) THEN MID$(s, p * 4) = MKS$(v)
+END SUB
+
+FUNCTION readArrayInteger% (s AS STRING, p AS LONG)
+  IF p > 0 AND p * 2 + 2 < LEN(s) THEN readArrayInteger = CVI(MID$(s, p * 2, 2))
+END FUNCTION
+
+SUB setArrayInteger (s AS STRING, p AS LONG, v AS INTEGER)
+  IF p > 0 AND p * 2 + 2 < LEN(s) THEN MID$(s, p * 2) = MKI$(v)
+END SUB
+
+FUNCTION readArrayDouble# (s AS STRING, p AS LONG)
+  IF p > 0 AND p * 8 + 8 < LEN(s) THEN readArrayDouble = CVL(MID$(s, p * 8, 8))
+END FUNCTION
+
+SUB setArrayDouble (s AS STRING, p AS LONG, v AS DOUBLE)
+  IF p > 0 AND p * 8 + 8 < LEN(s) THEN MID$(s, p * 8) = MKD$(v)
+END SUB
+$END IF

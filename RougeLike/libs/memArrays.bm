@@ -1,0 +1,19 @@
+' Library for memarrays
+$IF MEMARRAYS = UNDEFINED THEN
+  $LET MEMARRAYS = TRUE
+  '******************************************************************************************************
+  ' IMPORTANT!!!: Remember when initializing the _MEM to multiply the size by the number of bytes
+  '               in each element.
+  '******************************************************************************************************
+  SUB setMemlong (array AS _MEM, idx AS LONG, value AS LONG)
+    IF idx >= 0 AND idx * 8 < array.SIZE THEN
+      _MEMPUT array, array.OFFSET + idx * 8, value AS LONG
+    END IF
+  END SUB
+
+  FUNCTION getMemLong& (array AS _MEM, idx AS LONG)
+    IF idx > 0 AND idx * 8 < array.SIZE THEN
+      getMemLong = _MEMGET(array, array.OFFSET + idx * 8, LONG)
+    END IF
+  END FUNCTION
+$END IF

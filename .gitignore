@@ -1,5 +1,4 @@
 !*.bas
-RougeLike/
 
 fzxDemo/.nfs0000000013e98e6e0000000a
 
@@ -40,3 +39,31 @@ fzxNGN_BASE_v2/subfunclist.txt
 fzxNGN_BASE_v2/subfuncLister
 
 fzxNGN_BASE_v2/subfuncLister.bas
+
+*.zip
+
+RougeLike/Assets/Demo-project.tiled-session
+
+RougeLike/Assets/Music/A-Meadow-of-Mysteries.mp3
+
+RougeLike/Assets/Music/After-the-Forest-Battle.mp3
+
+RougeLike/Assets/Music/Alien-Wind-1.mp3
+
+RougeLike/Assets/Music/Awkward-Princesss-Day-Out_Looping.mp3
+
+RougeLike/Assets/Music/Castle-Lost.mp3
+
+RougeLike/Assets/Music/Chilly-Whispers.mp3
+
+RougeLike/Assets/Music/
+
+RougeLike/Assets/SOUND/
+
+RougeLike/Assets/Tilemap/transfix
+
+RougeLike/Assets/Tilemap/transfix.bas
+
+RougeLike/Panacea
+
+RougeLike/Saves/
