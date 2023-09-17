@@ -44,20 +44,6 @@ fzxNGN_BASE_v2/subfuncLister.bas
 
 RougeLike/Assets/Demo-project.tiled-session
 
-RougeLike/Assets/Music/A-Meadow-of-Mysteries.mp3
-
-RougeLike/Assets/Music/After-the-Forest-Battle.mp3
-
-RougeLike/Assets/Music/Alien-Wind-1.mp3
-
-RougeLike/Assets/Music/Awkward-Princesss-Day-Out_Looping.mp3
-
-RougeLike/Assets/Music/Castle-Lost.mp3
-
-RougeLike/Assets/Music/Chilly-Whispers.mp3
-
-RougeLike/Assets/Music/
-
 RougeLike/Assets/SOUND/
 
 RougeLike/Assets/Tilemap/transfix
@@ -66,5 +52,24 @@ RougeLike/Assets/Tilemap/transfix.bas
 
 RougeLike/Panacea
 
-RougeLike/Saves/
-*.txt
+RougeLike/Assets/Items
+
+fzxDemo/Assets/BridgeDemoScreenshot.png
+
+*.kra
+
+*.kra~
+
+*.png~
+
+RougeLike/Assets/Music/*.mp3
+
+!RougeLike/Music/Kingdom-Quest.mp3
+
+!RougeLike/Music/Etherea.mp3
+
+!RougeLike/Music/Bog-Creatures-On-the-Move_Looping.mp3
+
+!RougeLike/Music/Spooky-Enchantment.mp3
+
+fzxDemo/constraintConverter
