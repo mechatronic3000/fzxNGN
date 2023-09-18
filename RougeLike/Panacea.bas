@@ -415,7 +415,7 @@ SUB runScene (item() as titem,_
       ' draw the paths available
       DIM AS STRING pathString
       vecCount = 0
-      PRINT #__logfile, USING "player id: #### name: & hash: ############ playerxy: ##### #####"; playerID; __fzxBody(playerID).objectName; __fzxBody(playerID).objectHash; __fzxBody(playerID).fzx.position.x; __fzxBody(playerID).fzx.position.y
+      'PRINT #__logfile, USING "player id: #### name: & hash: ############ playerxy: ##### #####"; playerID; __fzxBody(playerID).objectName; __fzxBody(playerID).objectHash; __fzxBody(playerID).fzx.position.x; __fzxBody(playerID).fzx.position.y
       FOR xs = -6 TO 6
         FOR ys = -6 TO 6
           IF xs <> 0 OR ys <> 0 THEN
@@ -431,6 +431,8 @@ SUB runScene (item() as titem,_
           END IF
         NEXT
       NEXT
+      __gmEngine.guiRefresh = 1
+      updateGUI cGUI_LAYOUT_HUD
 
 
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_PLAYER_TURN
@@ -1006,6 +1008,9 @@ SUB handleEntitys (tile() AS tTILE, tilemap AS tTILEMAP)
                     fzxFSMChangeState __gmEntity(index).fsmSecondary, cFSM_ENTITY_IDLE
                     fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_SETUP
                   END IF
+                  ' update the hud after AP change
+                  __gmEngine.guiRefresh = 1
+                  updateGUI cGUI_LAYOUT_HUD
                 END IF
               END IF
           END SELECT
