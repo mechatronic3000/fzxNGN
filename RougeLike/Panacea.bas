@@ -418,9 +418,9 @@ SUB runScene (item() as titem,_
           IF xs <> 0 OR ys <> 0 THEN
             fzxVector2DSet tempVec, xs, ys
             vector2dToGameMapXY tilemap, __fzxBody(playerID).fzx.position, tempVec2
-
             fzxVector2DAddVectorND tempVec, tempVec, tempVec2
             pathString = AStarSetPath$(__gmEntity(playerID), tempVec2, tempVec, tilemap)
+            PRINT #__logfile, "xpos:"; xs; " ypos:"; ys; " path:"; pathString
             IF LEN(pathString) <= __gmEntity(playerID).stats.ap AND LEN(pathString) > 0 THEN
               vecs(vecCount) = tempVec
               vecCount = vecCount + 1
@@ -2123,47 +2123,56 @@ END SUB
 SUB _______________A_STAR_PATHFINDING (): END SUB
 
 FUNCTION AStarSetPath$ (entity AS tENTITY, startPos AS tFZX_VECTOR2d, TargetPos AS tFZX_VECTOR2d, tilemap AS tTILEMAP)
+  ' Verify all positions are valid
   IF TargetPos.x >= 0 AND TargetPos.x <= tilemap.mapWidth AND _
      TargetPos.y >= 0 AND TargetPos.y <= tilemap.mapHeight AND _
      AStarCollision( tilemap, targetpos) THEN
-    DIM TargetFound AS LONG
-    DIM PathMap(tilemap.mapWidth * tilemap.mapHeight) AS tPATH
-    DIM maxpathlength AS LONG
-    DIM ix, iy, count, i AS LONG
+
+    DIM TargetFound AS _BYTE
+
+    DIM AS LONG maxpathlength, ix, iy, count, i
     DIM NewG AS LONG
     DIM OpenPathCount AS LONG
     DIM LowF AS LONG
-    DIM ixOptimal, iyOptimal, OptimalPath_i AS LONG
+    DIM AS LONG ixOptimal, iyOptimal, OptimalPath_i
     DIM startreached AS LONG
     DIM pathlength AS LONG
     DIM AS STRING pathString
     DIM AS tFZX_VECTOR2d currPos, nextPos
-    DIM AS tFZX_VECTOR2d startPosition
-    maxpathlength = tilemap.mapWidth * tilemap.mapHeight
-    DIM SearchPathSet(4) AS tPATH, OpenPathSet(maxpathlength) AS tPATH
-    startPosition = startPos
+    DIM AS tFZX_VECTOR2d currentPosition
 
+    maxpathlength = tilemap.mapWidth * tilemap.mapHeight
+
+    DIM SearchPathSet(4) AS tPATH
+    DIM OpenPathSet(maxpathlength) AS tPATH
+    DIM PathMap(maxpathlength) AS tPATH
+
+    currentPosition = startPos
+
+    ' Set the path map positions
     FOR ix = 0 TO tilemap.mapWidth - 1
       FOR iy = 0 TO tilemap.mapHeight - 1
         PathMap(xyToGameMapPlain(tilemap, ix, iy)).position.x = ix
         PathMap(xyToGameMapPlain(tilemap, ix, iy)).position.y = iy
       NEXT
     NEXT
-    TargetFound = 0
+    TargetFound = FALSE
 
     DO
-      PathMap(xyToGameMapPlain(tilemap, startPosition.x, startPosition.y)).status = 2
+      PathMap(xyToGameMapPlain(tilemap, currentPosition.x, currentPosition.y)).status = 2
       count = count + 1
 
-      IF PathMap(xyToGameMapPlain(tilemap, TargetPos.x, TargetPos.y)).status = 2 THEN TargetFound = 1: EXIT DO
-      IF count > maxpathlength THEN EXIT DO
+      IF PathMap(xyToGameMapPlain(tilemap, TargetPos.x, TargetPos.y)).status = 2 THEN TargetFound = TRUE: EXIT DO
+      IF count > maxpathlength THEN EXIT DO ' make sure we do not overrun the array OpenPathSet
 
-      SearchPathSet(0) = PathMap(xyToGameMapPlain(tilemap, startPosition.x, startPosition.y))
-      IF startPosition.x < tilemap.mapWidth THEN SearchPathSet(1) = PathMap(xyToGameMapPlain(tilemap, startPosition.x + 1, startPosition.y))
-      IF startPosition.x > 0 THEN SearchPathSet(2) = PathMap(xyToGameMapPlain(tilemap, startPosition.x - 1, startPosition.y))
-      IF startPosition.y < tilemap.mapHeight THEN SearchPathSet(3) = PathMap(xyToGameMapPlain(tilemap, startPosition.x, startPosition.y + 1))
-      IF startPosition.y > 0 THEN SearchPathSet(4) = PathMap(xyToGameMapPlain(tilemap, startPosition.x, startPosition.y - 1))
+      ' set up the SearchPath Array to the current position and the four surrounding positions
+      SearchPathSet(0) = PathMap(xyToGameMapPlain(tilemap, currentPosition.x, currentPosition.y))
+      IF currentPosition.x < tilemap.mapWidth THEN SearchPathSet(1) = PathMap(xyToGameMapPlain(tilemap, currentPosition.x + 1, currentPosition.y))
+      IF currentPosition.x > 0 THEN SearchPathSet(2) = PathMap(xyToGameMapPlain(tilemap, currentPosition.x - 1, currentPosition.y))
+      IF currentPosition.y < tilemap.mapHeight THEN SearchPathSet(3) = PathMap(xyToGameMapPlain(tilemap, currentPosition.x, currentPosition.y + 1))
+      IF currentPosition.y > 0 THEN SearchPathSet(4) = PathMap(xyToGameMapPlain(tilemap, currentPosition.x, currentPosition.y - 1))
 
+      'scan the postions and determine if it is valid, if it is then calculate cost.
       FOR i = 1 TO 4
         IF AStarCollision(tilemap, SearchPathSet(i).position) THEN
 
@@ -2177,20 +2186,21 @@ FUNCTION AStarSetPath$ (entity AS tENTITY, startPos AS tFZX_VECTOR2d, TargetPos 
             SearchPathSet(i).status = 1
             SearchPathSet(i).g = AStarPathGCost(SearchPathSet(0).g)
             SearchPathSet(i).h = AStarPathHCost(SearchPathSet(i), TargetPos, entity)
-            SearchPathSet(i).f = SearchPathSet(i).g + SearchPathSet(i).h + (AStarWalkway(tilemap, SearchPathSet(i).position) * 10)
+            SearchPathSet(i).f = SearchPathSet(i).g + SearchPathSet(i).h ' + (AStarWalkway(tilemap, SearchPathSet(i).position) * 10)
             OpenPathSet(OpenPathCount) = SearchPathSet(i)
             OpenPathCount = OpenPathCount + 1
           END IF
         END IF
       NEXT
 
-      IF startPosition.x < tilemap.mapWidth THEN PathMap(xyToGameMapPlain(tilemap, startPosition.x + 1, startPosition.y)) = SearchPathSet(1)
-      IF startPosition.x > 0 THEN PathMap(xyToGameMapPlain(tilemap, startPosition.x - 1, startPosition.y)) = SearchPathSet(2)
-      IF startPosition.y < tilemap.mapHeight THEN PathMap(xyToGameMapPlain(tilemap, startPosition.x, startPosition.y + 1)) = SearchPathSet(3)
-      IF startPosition.y > 0 THEN PathMap(xyToGameMapPlain(tilemap, startPosition.x, startPosition.y - 1)) = SearchPathSet(4)
+      IF currentPosition.x < tilemap.mapWidth THEN PathMap(xyToGameMapPlain(tilemap, currentPosition.x + 1, currentPosition.y)) = SearchPathSet(1)
+      IF currentPosition.x > 0 THEN PathMap(xyToGameMapPlain(tilemap, currentPosition.x - 1, currentPosition.y)) = SearchPathSet(2)
+      IF currentPosition.y < tilemap.mapHeight THEN PathMap(xyToGameMapPlain(tilemap, currentPosition.x, currentPosition.y + 1)) = SearchPathSet(3)
+      IF currentPosition.y > 0 THEN PathMap(xyToGameMapPlain(tilemap, currentPosition.x, currentPosition.y - 1)) = SearchPathSet(4)
 
       IF OpenPathCount > (maxpathlength - 4) THEN EXIT DO
 
+      ' serach through the available positions for the most optimal route
       LowF = 32000: ixOptimal = 0: iyOptimal = 0
       FOR i = 0 TO OpenPathCount
         IF OpenPathSet(i).status = 1 AND OpenPathSet(i).f <> 0 THEN
@@ -2204,20 +2214,21 @@ FUNCTION AStarSetPath$ (entity AS tENTITY, startPos AS tFZX_VECTOR2d, TargetPos 
       NEXT
 
       IF ixOptimal = 0 AND iyOptimal = 0 THEN EXIT DO
-      startPosition = PathMap(xyToGameMapPlain(tilemap, ixOptimal, iyOptimal)).position
+      currentPosition = PathMap(xyToGameMapPlain(tilemap, ixOptimal, iyOptimal)).position
       OpenPathSet(OptimalPath_i).status = 2
     LOOP
 
-    IF TargetFound = 1 THEN
+    IF TargetFound = TRUE THEN
 
       DIM backpath(maxpathlength) AS tPATH
       backpath(0).position = PathMap(xyToGameMapPlain(tilemap, TargetPos.x, TargetPos.y)).position
 
-      startreached = 0
+      startreached = FALSE
       FOR i = 1 TO count
         backpath(i).position = PathMap(xyToGameMapPlain(tilemap, backpath(i - 1).position.x, backpath(i - 1).position.y)).parent
-        IF (startreached = 0) AND (backpath(i).position.x = startPosition.x) AND (backpath(i).position.y = startPosition.y) THEN
-          pathlength = i: startreached = 1
+        IF (startreached = FALSE) AND (backpath(i).position.x = currentPosition.x) AND (backpath(i).position.y = currentPosition.y) THEN
+          pathlength = i
+          startreached = TRUE
         END IF
       NEXT
 
@@ -2255,8 +2266,6 @@ END FUNCTION
 FUNCTION AStarCollision (tilemap AS tTILEMAP, position AS tFZX_VECTOR2d)
   ' This is hack that requires the block at 0 to be a collider block
   DIM AS LONG idx, c1, c2: idx = vector2dToGameMapPlain(tilemap, position)
-  'IF idx < LBOUND(__gmMap) OR idx > UBOUND(__gmMap) THEN
-  'PRINT #__logfile, USING "astar pos: #####    #####     idx:   #######    lbound: ##    ubound:#######"; position.x; position.y; idx; LBOUND(__gmMap); UBOUND(__gmMap)
   c1 = __gmMap(idx).collision
   c2 = __gmMap(0).collision
   AStarCollision = NOT c1 = c2
