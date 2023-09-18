@@ -76,7 +76,7 @@ OPTION _EXPLICIT
 '          : Added some residents to the town, They just wander around and do nothing.
 ' 09-18-23 : fixed the loot and inventory menus so they don't have to be updated
 '          : twice to display correct information.
-
+'          : AP now updates during combat mode.
 '**********************************************************************************************
 'TODO:
 ' ûFix the loot and inventory menus so that they dont have to be updated twice
@@ -336,9 +336,6 @@ SUB runScene (item() as titem,_
       clearScreen
       __gmEngine.guiRefresh = 1
       updateGUI cGUI_LAYOUT_LOOT
-      '__gmEngine.guiRefresh = 1
-      'updateGUI cGUI_LAYOUT_LOOT
-
 
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_LOOTMENU
     CASE cFSM_GAMEMODE_LOOTMENU:
