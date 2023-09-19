@@ -46,7 +46,6 @@ $IF TYPEDEFS = UNDEFINED THEN
     glText AS _INTEGER64
   END TYPE
 
-
   TYPE tITEM ' generalize archtype, not the exact inventory item
     id AS LONG
     sprite AS LONG
@@ -135,13 +134,20 @@ $IF TYPEDEFS = UNDEFINED THEN
   END TYPE
 
   TYPE tGUI_MAPS
+    sensorMap AS LONG
+
     hudMap AS LONG
     hudMapFile AS STRING * 256
     hudImage AS LONG
-    sensorMap AS LONG
+
+    hudLrgConMap AS LONG
+    hudLrgConMapFile AS STRING * 256
+    hudLrgConImage AS LONG
+
     inventoryMap AS LONG
     inventoryMapFile AS STRING * 256
     inventoryImage AS LONG
+
     lootMap AS LONG
     lootMapFile AS STRING * 256
     lootMapImage AS LONG
@@ -257,6 +263,9 @@ $IF TYPEDEFS = UNDEFINED THEN
     soundVolume AS SINGLE
   END TYPE
 
+  TYPE tCONSOLE
+    txt AS STRING * 32768
+  END TYPE
 
 
 $END IF

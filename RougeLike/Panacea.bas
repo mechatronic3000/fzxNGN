@@ -1,6 +1,5 @@
 ' Panacea v0.1
 
-
 $RESIZE:OFF
 OPTION _EXPLICIT
 '$dynamic
@@ -131,9 +130,11 @@ SUB main
 
   __gmEngine.currentMap = "Main_Menu.tmx"
   __gmEngine.gui.hudMapFile = "hud.tmx"
+  __gmEngine.gui.hudLrgConMapFile = "hudLrgCon.tmx"
   __gmEngine.gui.inventoryMapFile = "Inventory.tmx"
   __gmEngine.gui.lootMapFile = "Loot.tmx"
   __gmEngine.itemListFilename = "Items.xml"
+
 
   initScreen 1024, 768, 32
   fzxInitFPS
@@ -202,6 +203,10 @@ SUB buildScene (item() AS tITEM, container() AS tCONTAINER, tile() AS tTILE, til
   XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudMapFile), context()
   XMLGUI __gmEngine.gui.hudMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD), context(), 0
 
+  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudLrgConMapFile), context()
+  XMLGUI __gmEngine.gui.hudLrgConMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), context(), 0
+
+
   '********************************************************
   '   Load Items
   '********************************************************
@@ -236,7 +241,7 @@ SUB runScene (item() as titem,_
   DIM AS LONG backgroundMusic, music1, music2, music3
   DIM AS tFZX_VECTOR2d tempVec, tempVec2
   DIM AS tFZX_VECTOR2d position
-  DIM AS LONG invID, bkgndID, hudId, xs, ys, guiBtnID
+  DIM AS LONG bkgndID, hudId, xs, ys
 
   DIM AS LONG indx, playerID, mouseID, targetID
   STATIC lastZoom AS SINGLE
@@ -253,18 +258,21 @@ SUB runScene (item() as titem,_
   SELECT CASE __gmEngine.gameMode.currentState
     CASE cFSM_GAMEMODE_IDLE:
     CASE cFSM_GAMEMODE_SPLASH:
+
       fzxVector2DSet position, 100, 100
       addMessage tile(), tilemap, message(), "   ~00656 Panacea ~00656__  by Paul Martin _ aka  JUSTSOMEGUY", 4, position, 3.0
       playMusic __gmPlayList, __gmSounds(), "BACKGROUND"
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_START
 
     CASE cFSM_GAMEMODE_START:
+
       __gmEngine.gameMode.timerState.duration = 9
       clearScreen
       fzxFSMChangeStateOnTimer __gmEngine.gameMode, cFSM_GAMEMODE_INTRO_SETUP
       __fzxInputDevice.mouse.mouseMode = 0
 
     CASE cFSM_GAMEMODE_INTRO_SETUP:
+
       fzxVector2DSet position, 10, 100
       addMessage tile(), tilemap, message(), "             Panacea__" + _
                                              "Welcome to the small village of_" + _
@@ -277,27 +285,33 @@ SUB runScene (item() as titem,_
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_INTRO
 
     CASE cFSM_GAMEMODE_INTRO:
+
       __gmEngine.gameMode.timerState.duration = 9
       clearScreen
       fzxFSMChangeStateOnTimer __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY_SETUP
       __fzxInputDevice.mouse.mouseMode = 0
-      __gmEngine.overlayEnable = 1
+      __gmEngine.overlayEnable = TRUE
 
-      __gmEngine.guiRefresh = 1
+      __gmEngine.guiRefresh = TRUE
       updateGUI cGUI_LAYOUT_HUD
 
     CASE cFSM_GAMEMODE_GAMEPLAY_SETUP
+      __gmEngine.guiRefresh = TRUE
+      updateGUI cGUI_LAYOUT_HUD
       playerID = entityManagerID("PLAYER")
       moveCamera __fzxBody(__gmEntity(playerID).objectID).fzx.position
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
 
     CASE cFSM_GAMEMODE_GAMEPLAY:
+
       handlePlayerInput tile(), tilemap, message()
       IF handleMapChange(tile(), tilemap, message()) THEN EXIT SUB ' we changed maps so lets start again
       handleMapSpecific tile(), tilemap, message()
+      handleGUI
       renderBodies __gmGuiFields()
 
     CASE cFSM_GAMEMODE_CREDITS_SETUP:
+
       clearScreen
       fzxVector2DSet position, 40, 100
       addMessage tile(), tilemap, message(), "      Panacea__" + _
@@ -306,7 +320,9 @@ SUB runScene (item() as titem,_
                                              "Sound by Eric Matyas_soundimage.org" _
                                              , 4, position, 2.0
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_CREDITS
+
     CASE cFSM_GAMEMODE_CREDITS:
+
       __gmEngine.gameMode.timerState.duration = 9
       clearScreen
       fzxFSMChangeStateOnTimer __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
@@ -315,87 +331,44 @@ SUB runScene (item() as titem,_
       fzxSetBody cFZX_PARAMETER_POSITION, __gmEntity(playerID).objectID, tempVec.x, tempVec.y
 
     CASE cFSM_GAMEMODE_INVENTORY_SETUP:
-      clearScreen
-      __gmEngine.guiRefresh = 1
-      updateGUI cGUI_LAYOUT_INVENTORY
 
+      clearScreen
+      __gmEngine.guiRefresh = TRUE
+      updateGUI cGUI_LAYOUT_INVENTORY
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_INVENTORY
 
     CASE cFSM_GAMEMODE_INVENTORY:
 
+      handleGUI
       IF __fzxInputDevice.keyboard.keyHitPosEdge = 27 THEN
 
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
         clearScreen
-        __gmEngine.guiRefresh = 1
+        __gmEngine.guiRefresh = TRUE
         updateGUI cGUI_LAYOUT_HUD
       END IF
       renderBodies __gmGuiFields()
 
     CASE cFSM_GAMEMODE_LOOTMENU_SETUP:
+
       clearScreen
-      __gmEngine.guiRefresh = 1
+      __gmEngine.guiRefresh = TRUE
       updateGUI cGUI_LAYOUT_LOOT
 
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_LOOTMENU
+
     CASE cFSM_GAMEMODE_LOOTMENU:
-      'playerID = entityManagerID(body(), "PLAYER")
-      targetID = __gmEntity(playerID).parameters.target
 
-      guiBtnID = isOnGUISensor(__fzxInputDevice.mouse.position)
-
-      IF guiBtnID > 0 THEN
-        'clearScreen engine
-        FOR indx = 0 TO UBOUND(__gmGuiFields)
-          __gmGuiFields(indx).buttonState = 0
-          IF guiBtnID = __gmGuiFields(indx).buttonId THEN
-            IF __gmGuiFields(indx).menuType = cGUI_LAYOUT_LOOT THEN ' verify which menu
-              IF __fzxInputDevice.mouse.b1.doubleClick THEN
-                __gmGuiFields(indx).buttonState = 3 ' Double Clicked -- This pobably wont work unless button state 2 is ignored
-              ELSE IF __fzxInputDevice.mouse.b1.PosEdge THEN
-                  __gmGuiFields(indx).buttonState = 2 ' Button Clicked
-                ELSE
-                  __gmGuiFields(indx).buttonState = 1 ' Hover over Button
-                END IF
-              END IF
-            END IF
-          END IF
-
-          IF __gmGuiFields(indx).buttonState = 2 THEN
-            SELECT CASE guiBtnID
-              CASE 100 ' loot scroll up
-              CASE 101 ' loot scroll down
-              CASE 102 ' move inventory to loot
-              CASE 103 ' move loot to inventory
-              CASE 110 ' equip ring
-              CASE 111 ' equip helm
-              CASE 112 ' equip necklace
-              CASE 113 ' equip right glove
-              CASE 114 ' equip body armor
-              CASE 115 ' equip left glove
-              CASE 116 ' equip shield
-              CASE 117 ' equip boots
-              CASE 118 ' equip weapon
-
-              CASE 255 ' exit
-                clearScreen
-                __gmEngine.guiRefresh = 1
-                updateGUI cGUI_LAYOUT_HUD
-                fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
-                __gmEntity(targetID).parameters.activated = 0
-            END SELECT
-          END IF
-        NEXT
-      END IF
-
+      handleGUI
       IF __fzxInputDevice.keyboard.keyHitPosEdge = 27 THEN
         clearScreen
-        __gmEngine.guiRefresh = 1
+        __gmEngine.guiRefresh = TRUE
         updateGUI cGUI_LAYOUT_HUD
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
         __gmEntity(targetID).parameters.activated = 0
       END IF
       renderBodies __gmGuiFields()
+
     CASE cFSM_GAMEMODE_COMBAT_SETUP:
       '**************************************
       '   COMBAT
@@ -420,7 +393,7 @@ SUB runScene (item() as titem,_
             vector2dToGameMapXY tilemap, __fzxBody(playerID).fzx.position, tempVec2
             fzxVector2DAddVectorND tempVec, tempVec, tempVec2
             pathString = AStarSetPath$(__gmEntity(playerID), tempVec2, tempVec, tilemap)
-            PRINT #__logfile, "xpos:"; xs; " ypos:"; ys; " path:"; pathString
+            'PRINT #__logfile, "xpos:"; xs; " ypos:"; ys; " path:"; pathString
             IF LEN(pathString) <= __gmEntity(playerID).stats.ap AND LEN(pathString) > 0 THEN
               vecs(vecCount) = tempVec
               vecCount = vecCount + 1
@@ -430,10 +403,11 @@ SUB runScene (item() as titem,_
       NEXT
       __gmEngine.guiRefresh = 1
       updateGUI cGUI_LAYOUT_HUD
-
-
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_PLAYER_TURN
+
     CASE cFSM_GAMEMODE_COMBAT_PLAYER_TURN:
+
+      handleGUI
       IF __fzxInputDevice.keyboard.keyHitPosEdge = 27 THEN
         fzxVector2DSet position, 100, 100
         addMessage tile(), tilemap, message(), "LEAVING COMBAT", 1, position, 3.0
@@ -445,7 +419,7 @@ SUB runScene (item() as titem,_
       END IF
 
       renderBodies __gmGuiFields()
-
+      '_DEST __gmEngine.overlayScr
       FOR indx = 0 TO vecCount - 1
         gameMapXYToVector2d tilemap, vecs(indx), tempVec2
         fzxVector2DSet tempVec2, tempVec2.x + tilemap.tileWidth / 2, tempVec2.y + tilemap.tileHeight / 2
@@ -458,6 +432,8 @@ SUB runScene (item() as titem,_
           renderSolidCircleVector tempVec2, 2, _RGB32(200, 150, 0)
         END IF
       NEXT
+      '_DEST 0
+      'updateGUI cGUI_LAYOUT_HUD
       IF __gmEntity(playerID).stats.ap <= 0 THEN
         __gmEntity(playerID).stats.ap = __gmEntity(playerID).stats.apMax
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_ENEMY_TURN
@@ -470,8 +446,64 @@ SUB runScene (item() as titem,_
       __gmEngine.gameMode.timerState.duration = 6
       fzxFSMChangeStateOnTimer __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_SETUP
       renderBodies __gmGuiFields()
+
     CASE ELSE
   END SELECT
+END SUB
+
+
+SUB handleGUI ()
+  DIM AS LONG playerId, targetID, guiBtnId, indx
+  playerId = entityManagerID("PLAYER")
+  targetID = __gmEntity(playerId).parameters.target
+
+  guiBtnId = isOnGUISensor(__fzxInputDevice.mouse.position)
+
+  IF guiBtnId > 0 THEN
+    'clearScreen engine
+    FOR indx = 0 TO UBOUND(__gmGuiFields)
+      __gmGuiFields(indx).buttonState = cFZX_MOUSE_NONE
+      IF guiBtnId = __gmGuiFields(indx).buttonId THEN
+
+        IF __fzxInputDevice.mouse.b1.doubleClick THEN
+          __gmGuiFields(indx).buttonState = cFZX_MOUSE_DOUBLECLICK ' Double Clicked -- This probably wont work unless button state 2 is ignored
+        ELSE IF __fzxInputDevice.mouse.b1.PosEdge THEN
+            __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK ' Button Clicked
+          ELSE
+            __gmGuiFields(indx).buttonState = cFZX_MOUSE_HOVER ' Hover over Button
+          END IF
+        END IF
+
+      END IF
+      SELECT CASE __gmGuiFields(indx).menuType
+        CASE cGUI_LAYOUT_LOOT
+          IF __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
+            SELECT CASE guiBtnId
+              CASE 100 ' loot scroll up
+              CASE 101 ' loot scroll down
+              CASE 102 ' move inventory to loot
+              CASE 103 ' move loot to inventory
+              CASE 110 ' equip ring
+              CASE 111 ' equip helm
+              CASE 112 ' equip necklace
+              CASE 113 ' equip right glove
+              CASE 114 ' equip body armor
+              CASE 115 ' equip left glove
+              CASE 116 ' equip shield
+              CASE 117 ' equip boots
+              CASE 118 ' equip weapon
+
+              CASE 255 ' exit
+                clearScreen
+                __gmEngine.guiRefresh = TRUE
+                updateGUI cGUI_LAYOUT_HUD
+                fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
+                __gmEntity(targetID).parameters.activated = 0
+            END SELECT
+          END IF
+      END SELECT
+    NEXT
+  END IF
 END SUB
 
 SUB handlePlayerInput (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSAGE)
@@ -702,13 +734,11 @@ SUB updateGUI (gui AS LONG)
     playerID = entityManagerID("PLAYER")
     ' clear the overlay screen
     clearOverlayScr
+    clearSensorMap
     ' put the template image on the overlay screen
-    '_PUTIMAGE , __gmGuiLayout(gui).tileMap, __gmEngine.overlayScr
     ' setup the message construct
     m.baseImage = __gmGuiLayout(gui).tileMap
-    'm.baseImage = __gmEngine.overlayScr
     m.scale = .5
-    'm.scale = 1
     m.bgColor = __gmEngine.displayClearColor
     ' iterate through the fields
     FOR indx = 1 TO UBOUND(__gmGuiFields)
@@ -767,6 +797,8 @@ SUB updateGUI (gui AS LONG)
             END SELECT
 
           CASE cGUI_LAYOUT_HUD
+            IF __gmEngine.gameMode.currentState = cFSM_GAMEMODE_COMBAT_PLAYER_TURN THEN
+            END IF
             SELECT CASE _TRIM$(__gmGuiFields(indx).Id)
               CASE "fNAME"
                 renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD), m, formatString$(__gmEntity(playerID).stats.nameString, 12)
@@ -782,8 +814,11 @@ SUB updateGUI (gui AS LONG)
         IF __gmGuiFields(indx).buttonId > 0 THEN
           ' If its a button then place a box in the sensormap so that it can be used later
           _DEST __gmEngine.gui.sensorMap
-          LINE (__gmGuiFields(indx).position.x * 2, __gmGuiFields(indx).position.y * 2)-(__gmGuiFields(indx).position.x * 2 + __gmGuiFields(indx).size.x * 2, __gmGuiFields(indx).position.y * 2 + __gmGuiFields(indx).size.y * 2), _RGB32(0, 0, __gmGuiFields(indx).buttonId), BF
-          _DEST 0
+          LINE (__gmGuiFields(indx).position.x * 2, _
+                __gmGuiFields(indx).position.y * 2 _
+             )-(__gmGuiFields(indx).position.x * 2 + __gmGuiFields(indx).size.x * 2, _
+                __gmGuiFields(indx).position.y * 2 + __gmGuiFields(indx).size.y * 2),_
+                 _RGB32(0, 0, __gmGuiFields(indx).buttonId), BF
         END IF
       END IF
     NEXT
@@ -1360,11 +1395,15 @@ SUB renderBodies (__gmGuiFields() AS tGUI_FIELDS)
   IF __gmEngine.overlayEnable THEN
     _PUTIMAGE , __gmEngine.overlayScr, __gmEngine.displayScr
     FOR i = 1 TO UBOUND(__gmGuiFields)
-      IF __gmGuiFields(i).buttonState = 1 THEN
+      IF __gmGuiFields(i).buttonState = cFZX_MOUSE_HOVER THEN
         _DEST __gmEngine.displayScr
         ' draw a highlight around buttons
-        LINE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2)-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2, __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), _RGB32(255, 255, 255), B , &B0101010101010101
-        __gmGuiFields(i).buttonState = 0
+        LINE (__gmGuiFields(i).position.x * 2, _
+              __gmGuiFields(i).position.y * 2 _
+           )-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2,_
+              __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), _
+              _RGB32(255, 255, 255), B , &B0101010101010101
+        __gmGuiFields(i).buttonState = cFZX_MOUSE_NONE
       END IF
     NEXT
   END IF
