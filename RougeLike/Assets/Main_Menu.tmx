@@ -156,7 +156,7 @@
    <property name="MUSIC_2" type="file" value="Music/Bog-Creatures-On-the-Move_Looping.mp3"/>
   </properties>
  </group>
- <objectgroup id="2" name="Objects">
+ <objectgroup id="2" name="Objects" visible="0">
   <object id="1" name="PLAYER" type="PLAYER" x="501.333" y="622.5">
    <properties>
     <property name="BEHAVIOR" type="int" value="0"/>

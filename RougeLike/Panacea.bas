@@ -135,6 +135,39 @@ SUB main
   __gmEngine.gui.lootMapFile = "Loot.tmx"
   __gmEngine.itemListFilename = "Items.xml"
 
+  __gmConsole.img = _NEWIMAGE(512, 1024, 32)
+  __gmConsole.xSize = 29
+  __gmConsole.ySize = 2
+  __gmConsole.yPos = 0
+  ' test wall of text
+  __gmConsole.txt = " A great revolution had indeed been accomplished. The fall of the" + _
+    "Bastille indicated the fall of the old monarchy, in which the King" + _
+    "alone represented the nation. Louis had said to the Assembly that," + _
+    "unless he were obeyed, he would secure the happiness of his subjects" + _
+    "without its aid, and Paris had replied by rising in support of the" + _
+    "Assembly against himself. The falling away of the army had unmistakably" + _
+    "revealed his weakness and powerlessness to resist the national will." + _
+    "His brother, the Count of Artois, and other unpopular courtiers, known" + _
+    "to be especially hostile to the people’s cause, fled the country" + _
+    "in disgust and alarm. Louis himself had no choice but to yield all" + _
+    "that was demanded of him. He ordered the withdrawal of the troops," + _
+    "and recalled Necker to office. The Assembly sent eighty-eight of" + _
+    "its members to announce the good news to Paris. They were received" + _
+    "with enthusiasm, and escorted by thousands of national guards to" + _
+    "the Hôtel de Ville, where the electors exercised the functions of a" + _
+    "provisional municipality. Two deputies were singled out for special" + _
+    "honours. A young and popular nobleman, Lafayette, who had fought in" + _
+    "America against the English, and since the meeting of the Assembly had" + _
+    "supported the cause of the Third Estate, was by acclamation chosen" + _
+    "commander-in-chief of the new militia or national guard. Bailly, a" + _
+    "mathematician, who had been president of the Third Estate when the oath" + _
+    "was taken in the tennis court, was after the same fashion chosen mayor" + _
+    "of Paris. To the blue and red, the colours of Paris first worn by the" + _
+    "national guard, was subsequently, on Lafayette’s suggestion, added" + _
+    "white, the colour of France. This new flag would, he magniloquently" + _
+    "said, make the round of the world. Thus was instituted the famous" + _
+    "tricolour, the emblem to France of the revolution."
+
 
   initScreen 1024, 768, 32
   fzxInitFPS
@@ -1995,6 +2028,34 @@ SUB renderText (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, messa
   renderTextEx tile(), tilemap, message, messageString
 END SUB
 
+SUB consoleText
+  DIM AS LONG iter, l, lc, chunck
+  DIM AS STRING tempCon(100) ' temporary console broke up into lines
+  l = lenTxt(__gmConsole.txt)
+  lc = 0 ' line count
+  iter = 1: DO WHILE iter <= l
+    chunck = __gmConsole.xSize 'how much text per line
+'    TODO : somewhere in here a check for special chracters needs to ber handled
+
+    IF chunck + iter > l THEN 'if your at the last line set chunk to whats left
+      chunck = l - iter
+    END IF
+    tempCon(lc) = MID$(__gmConsole.txt, iter, chunck)
+    lc = lc + 1
+    ' resize if more lines are needed
+    IF lc > UBOUND(tempCon) THEN REDIM _PRESERVE tempCon(UBOUND(tempCon) + 100) AS STRING
+  iter = iter + chunck: LOOP
+
+END SUB
+
+FUNCTION lenTxt (t AS STRING)
+  DIM iter AS LONG
+  iter = 1: DO WHILE iter <= LEN(t) AND MID$(t, iter, 1) <> CHR$(0)
+  iter = iter + 1: LOOP
+  lenTxt = iter
+END FUNCTION
+
+
 SUB renderTextEx (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, messageString AS STRING)
   DIM AS LONG i, numberOfLines, linelengthCount, longestLine, ch, directchar, mw, mh, tw, th
   DIM AS tFZX_VECTOR2d cursor
@@ -2007,12 +2068,12 @@ SUB renderTextEx (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, mes
     IF ch = 126 THEN '~#####  is used to render tiles directly
       i = i + 5
       IF i > LEN(messageString) THEN EXIT FOR
-    END IF
-
-    IF ch = 95 THEN ' check for underscore
-      numberOfLines = numberOfLines + 1
-      IF linelengthCount > longestLine THEN longestLine = linelengthCount
-      linelengthCount = 0
+    ELSE
+      IF ch = 95 THEN ' check for underscore
+        numberOfLines = numberOfLines + 1
+        IF linelengthCount > longestLine THEN longestLine = linelengthCount
+        linelengthCount = 0
+      END IF
     END IF
   NEXT
   IF linelengthCount > longestLine THEN longestLine = linelengthCount
@@ -2511,7 +2572,7 @@ SUB XMLapplyAttributes (tile() AS tTILE, tilemap AS tTILEMAP, con() AS tFZX_STRI
                 yp = getXMLArgValue(arg, " y=") * tilemap.tilescale
                 fzxVector2DSet tempVec, xp + tilemap.tileWidth, yp + tilemap.tileHeight
                 tempId = entityCreate(tilemap, objectName, tempVec)
-                PRINT tempId; "  >"; objectName; "<"
+                'PRINT tempId; "  >"; objectName; "<"
               CASE "SENSOR":
                 objectName = getXMLArgString$(arg, " name=")
                 xp = getXMLArgValue(arg, " x=") * tilemap.tilescale

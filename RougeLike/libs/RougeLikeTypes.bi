@@ -133,7 +133,7 @@ $IF TYPEDEFS = UNDEFINED THEN
     maxLightDistance AS LONG
   END TYPE
 
-  TYPE tGUI_MAPS
+  TYPE tGUI_MAPS ' the tile based maps used for the GUI
     sensorMap AS LONG
 
     hudMap AS LONG
@@ -169,24 +169,34 @@ $IF TYPEDEFS = UNDEFINED THEN
   END TYPE
 
   TYPE tENGINE
+    currentMap AS STRING * 256
+    mapParameters AS tMAPPARAMETERS
+
+
     workingDirectory AS STRING * 512
     assetsDirectory AS STRING * 512
     saveDirectory AS STRING * 512
+
+    resting AS _FLOAT
+
+    gameMode AS tFZX_FSM
+
+    logFileName AS STRING * 256
+    logFileNumber AS LONG
+
+    itemListFilename AS STRING * 128
+
     displayClearColor AS LONG
+    overlayEnable AS _BYTE
+
     displayScr AS LONG
     hiddenScr AS LONG
     overlayScr AS LONG
-    overlayEnable AS _BYTE
-    resting AS _FLOAT
-    gameMode AS tFZX_FSM
-    logFileName AS STRING * 256
-    logFileNumber AS LONG
+
     displayMask AS LONG
-    currentMap AS STRING * 256
-    mapParameters AS tMAPPARAMETERS
-    guiRefresh AS _BYTE ' Set to refresh gui
+
     gui AS tGUI_MAPS
-    itemListFilename AS STRING * 128
+    guiRefresh AS _BYTE ' Set to refresh gui
     ' Refactoring rendering pipeline goes below here
     renderPipeline AS _MEM ' array of images
   END TYPE
@@ -202,7 +212,7 @@ $IF TYPEDEFS = UNDEFINED THEN
     id AS LONG
   END TYPE
 
-  TYPE tPATH
+  TYPE tPATH ' used for A star
     position AS tFZX_VECTOR2d
     parent AS tFZX_VECTOR2d
     g AS LONG
@@ -264,7 +274,12 @@ $IF TYPEDEFS = UNDEFINED THEN
   END TYPE
 
   TYPE tCONSOLE
+    img AS LONG
     txt AS STRING * 32768
+    yPos AS LONG ' last viewable position in log (normally at the end)
+    xSize AS LONG ' width of the currently viewable window . (in characters not pixels)
+    ySize AS LONG ' height of the currently viewable window. (in characters not pixels)
+    tSize AS LONG ' height of the font
   END TYPE
 
 
