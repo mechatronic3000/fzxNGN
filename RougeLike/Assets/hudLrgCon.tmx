@@ -51,7 +51,12 @@
    </properties>
   </object>
   <object id="42" name="fCondition" type="3" x="480" y="16" width="16" height="16"/>
-  <object id="43" name="fMinimize" type="3" x="240.308" y="192.921" width="16" height="16"/>
+  <object id="43" name="fMinimize" type="3" x="240.308" y="192.921" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2089"/>
+    <property name="BUTTON" type="int" value="72"/>
+   </properties>
+  </object>
   <object id="44" name="fbMapArea" type="3" x="16.4275" y="48.0188" width="480.819" height="144.688">
    <properties>
     <property name="ACTIVATED_TILE" type="int" value="0"/>

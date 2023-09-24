@@ -298,7 +298,7 @@ SUB runScene (item() as titem,_
 
     CASE cFSM_GAMEMODE_GAMEPLAY_SETUP
       __gmEngine.guiRefresh = TRUE
-      updateGUI cGUI_LAYOUT_HUD
+      updateGUI __gmEngine.gui.hud ' cGUI_LAYOUT_HUD
       playerID = entityManagerID("PLAYER")
       moveCamera __fzxBody(__gmEntity(playerID).objectID).fzx.position
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
@@ -484,14 +484,9 @@ SUB handleGUI (tilemap AS tTILEMAP)
 
       SELECT CASE __gmGuiFields(indx).menuType
         CASE cGUI_LAYOUT_HUD
-          'IF __gmGuiFields(indx).Id = "fConsole" THEN
-          '  _PUTIMAGE (__gmGuiFields(indx).position.x, __gmGuiFields(indx).position.y), __gmConsole.img,
-          'END IF
           IF guiBtnId = 1 AND __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
-            'IF __fzxInputDevice.mouse.hoverOver THEN
             moveEntity __gmEntity(playerId), __fzxInputDevice.mouse.worldPosition, tilemap
             fzxFSMChangeState __fzxCamera.fsm, cFSM_CAMERA_IDLE
-            'END IF
           END IF
 
           IF __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
@@ -500,9 +495,33 @@ SUB handleGUI (tilemap AS tTILEMAP)
                 __gmConsole.yPos = __gmConsole.yPos + tilemap.tileHeight: IF __gmConsole.yPos > _HEIGHT(__gmConsole.img) THEN __gmConsole.yPos = _HEIGHT(__gmConsole.img)
               CASE 62 ' scroll up
                 __gmConsole.yPos = __gmConsole.yPos - tilemap.tileHeight: IF __gmConsole.yPos < 0 THEN __gmConsole.yPos = 0
+              CASE 60 ' consoleswitch
+                __gmEngine.gui.hud = cGUI_LAYOUT_HUD_LARGE_CONSOLE
+                __gmEngine.guiRefresh = TRUE
+                updateGUI __gmEngine.gui.hud
+                __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - __gmConsole.ySize) * 16 'tilemap.tileHeight
             END SELECT
           END IF
         CASE cGUI_LAYOUT_HUD_LARGE_CONSOLE
+
+          IF guiBtnId = 2 AND __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
+            moveEntity __gmEntity(playerId), __fzxInputDevice.mouse.worldPosition, tilemap
+            fzxFSMChangeState __fzxCamera.fsm, cFSM_CAMERA_IDLE
+          END IF
+
+          IF __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
+            SELECT CASE guiBtnId
+              CASE 71 '  scroll down
+                __gmConsole.yPos = __gmConsole.yPos + tilemap.tileHeight: IF __gmConsole.yPos > _HEIGHT(__gmConsole.img) THEN __gmConsole.yPos = _HEIGHT(__gmConsole.img)
+              CASE 70 ' scroll up
+                __gmConsole.yPos = __gmConsole.yPos - tilemap.tileHeight: IF __gmConsole.yPos < 0 THEN __gmConsole.yPos = 0
+              CASE 72 ' console switch
+                __gmEngine.gui.hud = cGUI_LAYOUT_HUD
+                __gmEngine.guiRefresh = TRUE
+                updateGUI __gmEngine.gui.hud
+                __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - __gmConsole.ySize) * 16 'tilemap.tileHeight
+            END SELECT
+          END IF
 
         CASE cGUI_LAYOUT_LOOT
           IF __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
@@ -825,6 +844,10 @@ SUB updateGUI (gui AS LONG)
           CASE cGUI_LAYOUT_HUD
             IF __gmEngine.gameMode.currentState = cFSM_GAMEMODE_COMBAT_PLAYER_TURN THEN
             END IF
+            ' TODO : this will have to be fixed later with a value from tile UDT
+            __gmConsole.xSize = 58
+            __gmConsole.ySize = 4
+
             SELECT CASE _TRIM$(__gmGuiFields(indx).Id)
               CASE "fNAME"
                 renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD), m, formatString$(__gmEntity(playerID).stats.nameString, 12)
@@ -835,6 +858,23 @@ SUB updateGUI (gui AS LONG)
               CASE "fHPMax"
                 renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD), m, formatNumberString$(__gmEntity(playerID).stats.hpMax, 3)
             END SELECT
+          CASE cGUI_LAYOUT_HUD_LARGE_CONSOLE
+            IF __gmEngine.gameMode.currentState = cFSM_GAMEMODE_COMBAT_PLAYER_TURN THEN
+            END IF
+            __gmConsole.xSize = 58
+            __gmConsole.ySize = 20
+
+            SELECT CASE _TRIM$(__gmGuiFields(indx).Id)
+              CASE "fNAME"
+                renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), m, formatString$(__gmEntity(playerID).stats.nameString, 12)
+              CASE "fAP"
+                renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), m, formatNumberString$(__gmEntity(playerID).stats.ap, 2)
+              CASE "fHP"
+                renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), m, formatNumberString$(__gmEntity(playerID).stats.hp, 3)
+              CASE "fHPMax"
+                renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), m, formatNumberString$(__gmEntity(playerID).stats.hpMax, 3)
+            END SELECT
+
         END SELECT
 
         IF __gmGuiFields(indx).buttonId > 0 THEN
@@ -1068,7 +1108,7 @@ SUB handleEntitys (tile() AS tTILE, tilemap AS tTILEMAP)
                   END IF
                   ' update the hud after AP change
                   __gmEngine.guiRefresh = 1
-                  updateGUI cGUI_LAYOUT_HUD
+                  updateGUI __gmEngine.gui.hud 'cGUI_LAYOUT_HUD
                 END IF
               END IF
           END SELECT
@@ -1436,12 +1476,12 @@ SUB renderBodies (tilemap AS tTILEMAP)
         CASE cGUI_LAYOUT_HUD
           IF _TRIM$(__gmGuiFields(i).Id) = "fConsole" THEN
             _DEST __gmEngine.displayScr
-            _PUTIMAGE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2)-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2, __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), __gmConsole.img, __gmEngine.displayScr, (0, __gmConsole.yPos)-(__gmConsole.xSize * tilemap.tileWidth, __gmConsole.ySize * tilemap.tileWidth + __gmConsole.yPos)
+            _PUTIMAGE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2)-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2, __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), __gmConsole.img, __gmEngine.displayScr, (0, __gmConsole.yPos)-(__gmConsole.xSize * tilemap.tileWidth, __gmConsole.ySize * tilemap.tileHeight + __gmConsole.yPos)
           END IF
         CASE cGUI_LAYOUT_HUD_LARGE_CONSOLE
           IF _TRIM$(__gmGuiFields(i).Id) = "fConsoleLrg" THEN
             _DEST __gmEngine.displayScr
-            _PUTIMAGE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2)-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2, __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), __gmConsole.img, __gmEngine.displayScr, (0, __gmConsole.yPos)-(__gmConsole.xSize * tilemap.tileWidth, __gmConsole.ySize * tilemap.tileWidth + __gmConsole.yPos)
+            _PUTIMAGE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2)-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2, __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), __gmConsole.img, __gmEngine.displayScr, (0, __gmConsole.yPos)-(__gmConsole.xSize * tilemap.tileWidth, __gmConsole.ySize * tilemap.tileHeight + __gmConsole.yPos)
           END IF
 
       END SELECT
@@ -2042,7 +2082,8 @@ SUB consoleOut (tile() AS tTILE, tilemap AS tTILEMAP, s AS STRING)
   'SaveImage __gmConsole.img, _CWD$ + OSPathJoin + "console"
   ' 4 is going to have to be replaced with the ysize of the console
 
-  __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - 4) * tilemap.tileHeight
+  '  __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - 4) * tilemap.tileHeight
+  __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - __gmConsole.ySize) * tilemap.tileHeight
 END SUB
 
 SUB consoleText (tile() AS tTILE, tilemap AS tTILEMAP)
