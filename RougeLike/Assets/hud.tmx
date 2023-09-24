@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.1" orientation="orthogonal" renderorder="right-down" width="32" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="44">
+<map version="1.8" tiledversion="1.8.1" orientation="orthogonal" renderorder="right-down" width="32" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="48">
  <tileset firstgid="1" source="RougeLike.tsx"/>
  <layer id="1" name="Tile Layer 1" width="32" height="24">
   <properties>
@@ -55,6 +55,12 @@
    <properties>
     <property name="ACTIVATED_TILE" type="int" value="2089"/>
     <property name="BUTTON" type="int" value="60"/>
+   </properties>
+  </object>
+  <object id="44" name="fbMapArea" type="2" x="14.532" y="48.0188" width="480.188" height="272.317">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="0"/>
+    <property name="BUTTON" type="int" value="1"/>
    </properties>
   </object>
  </objectgroup>

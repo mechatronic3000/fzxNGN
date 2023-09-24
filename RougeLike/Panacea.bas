@@ -135,40 +135,6 @@ SUB main
   __gmEngine.gui.lootMapFile = "Loot.tmx"
   __gmEngine.itemListFilename = "Items.xml"
 
-  __gmConsole.img = _NEWIMAGE(512, 1024, 32)
-  __gmConsole.xSize = 29
-  __gmConsole.ySize = 2
-  __gmConsole.yPos = 0
-  ' test wall of text
-  __gmConsole.txt = " A great revolution had indeed been accomplished. The fall of the" + _
-    "Bastille indicated the fall of the old monarchy, in which the King" + _
-    "alone represented the nation. Louis had said to the Assembly that," + _
-    "unless he were obeyed, he would secure the happiness of his subjects" + _
-    "without its aid, and Paris had replied by rising in support of the" + _
-    "Assembly against himself. The falling away of the army had unmistakably" + _
-    "revealed his weakness and powerlessness to resist the national will." + _
-    "His brother, the Count of Artois, and other unpopular courtiers, known" + _
-    "to be especially hostile to the people’s cause, fled the country" + _
-    "in disgust and alarm. Louis himself had no choice but to yield all" + _
-    "that was demanded of him. He ordered the withdrawal of the troops," + _
-    "and recalled Necker to office. The Assembly sent eighty-eight of" + _
-    "its members to announce the good news to Paris. They were received" + _
-    "with enthusiasm, and escorted by thousands of national guards to" + _
-    "the Hôtel de Ville, where the electors exercised the functions of a" + _
-    "provisional municipality. Two deputies were singled out for special" + _
-    "honours. A young and popular nobleman, Lafayette, who had fought in" + _
-    "America against the English, and since the meeting of the Assembly had" + _
-    "supported the cause of the Third Estate, was by acclamation chosen" + _
-    "commander-in-chief of the new militia or national guard. Bailly, a" + _
-    "mathematician, who had been president of the Third Estate when the oath" + _
-    "was taken in the tennis court, was after the same fashion chosen mayor" + _
-    "of Paris. To the blue and red, the colours of Paris first worn by the" + _
-    "national guard, was subsequently, on Lafayette’s suggestion, added" + _
-    "white, the colour of France. This new flag would, he magniloquently" + _
-    "said, make the round of the world. Thus was instituted the famous" + _
-    "tricolour, the emblem to France of the revolution."
-
-
   initScreen 1024, 768, 32
   fzxInitFPS
   buildScene item(),_
@@ -176,6 +142,7 @@ SUB main
              tile(), _
              tileMap, _
              message()
+
 
   DO
     runScene item(),_
@@ -239,6 +206,7 @@ SUB buildScene (item() AS tITEM, container() AS tCONTAINER, tile() AS tTILE, til
   XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudLrgConMapFile), context()
   XMLGUI __gmEngine.gui.hudLrgConMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), context(), 0
 
+  __gmEngine.gui.hud = cGUI_LAYOUT_HUD
 
   '********************************************************
   '   Load Items
@@ -334,14 +302,20 @@ SUB runScene (item() as titem,_
       playerID = entityManagerID("PLAYER")
       moveCamera __fzxBody(__gmEntity(playerID).objectID).fzx.position
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
+      __gmConsole.xSize = 58
+      __gmConsole.ySize = 4
+      __gmConsole.yPos = 0
+      ' test wall of text
+      consoleOut tile(), tilemap, "Welcome to Mona!"
+
 
     CASE cFSM_GAMEMODE_GAMEPLAY:
 
       handlePlayerInput tile(), tilemap, message()
       IF handleMapChange(tile(), tilemap, message()) THEN EXIT SUB ' we changed maps so lets start again
       handleMapSpecific tile(), tilemap, message()
-      handleGUI
-      renderBodies __gmGuiFields()
+      handleGUI tilemap
+      renderBodies tilemap
 
     CASE cFSM_GAMEMODE_CREDITS_SETUP:
 
@@ -372,7 +346,7 @@ SUB runScene (item() as titem,_
 
     CASE cFSM_GAMEMODE_INVENTORY:
 
-      handleGUI
+      handleGUI tilemap
       IF __fzxInputDevice.keyboard.keyHitPosEdge = 27 THEN
 
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
@@ -380,7 +354,7 @@ SUB runScene (item() as titem,_
         __gmEngine.guiRefresh = TRUE
         updateGUI cGUI_LAYOUT_HUD
       END IF
-      renderBodies __gmGuiFields()
+      renderBodies tilemap
 
     CASE cFSM_GAMEMODE_LOOTMENU_SETUP:
 
@@ -392,7 +366,7 @@ SUB runScene (item() as titem,_
 
     CASE cFSM_GAMEMODE_LOOTMENU:
 
-      handleGUI
+      handleGUI tilemap
       IF __fzxInputDevice.keyboard.keyHitPosEdge = 27 THEN
         clearScreen
         __gmEngine.guiRefresh = TRUE
@@ -400,7 +374,7 @@ SUB runScene (item() as titem,_
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
         __gmEntity(targetID).parameters.activated = 0
       END IF
-      renderBodies __gmGuiFields()
+      renderBodies tilemap
 
     CASE cFSM_GAMEMODE_COMBAT_SETUP:
       '**************************************
@@ -413,8 +387,8 @@ SUB runScene (item() as titem,_
       END IF
 
       fzxVector2DSet position, 100, 100
-      addMessage tile(), tilemap, message(), "PLAYER TURN", 1, position, 3.0
-
+      'addMessage tile(), tilemap, message(), "PLAYER TURN", 1, position, 3.0
+      consoleOut tile(), tilemap, "Isaac Turn"
       ' draw the paths available
       DIM AS STRING pathString
       vecCount = 0
@@ -440,10 +414,11 @@ SUB runScene (item() as titem,_
 
     CASE cFSM_GAMEMODE_COMBAT_PLAYER_TURN:
 
-      handleGUI
+      handleGUI tilemap
       IF __fzxInputDevice.keyboard.keyHitPosEdge = 27 THEN
-        fzxVector2DSet position, 100, 100
-        addMessage tile(), tilemap, message(), "LEAVING COMBAT", 1, position, 3.0
+        'fzxVector2DSet position, 100, 100
+        'addMessage tile(), tilemap, message(), "LEAVING COMBAT", 1, position, 3.0
+        consoleOut tile(), tilemap, "Leaving Combat"
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
       END IF
 
@@ -451,7 +426,7 @@ SUB runScene (item() as titem,_
         moveCamera __fzxBody(mouseID).fzx.position
       END IF
 
-      renderBodies __gmGuiFields()
+      renderBodies tilemap
       '_DEST __gmEngine.overlayScr
       FOR indx = 0 TO vecCount - 1
         gameMapXYToVector2d tilemap, vecs(indx), tempVec2
@@ -470,22 +445,21 @@ SUB runScene (item() as titem,_
       IF __gmEntity(playerID).stats.ap <= 0 THEN
         __gmEntity(playerID).stats.ap = __gmEntity(playerID).stats.apMax
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_ENEMY_TURN
-        fzxVector2DSet position, 100, 100
-        addMessage tile(), tilemap, message(), "ENEMY TURN!", 1, position, 3.0
+        consoleOut tile(), tilemap, "ENEMY TURN!"
       END IF
 
     CASE cFSM_GAMEMODE_COMBAT_ENEMY_TURN:
 
       __gmEngine.gameMode.timerState.duration = 6
       fzxFSMChangeStateOnTimer __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_SETUP
-      renderBodies __gmGuiFields()
+      renderBodies tilemap
 
     CASE ELSE
   END SELECT
 END SUB
 
 
-SUB handleGUI ()
+SUB handleGUI (tilemap AS tTILEMAP)
   DIM AS LONG playerId, targetID, guiBtnId, indx
   playerId = entityManagerID("PLAYER")
   targetID = __gmEntity(playerId).parameters.target
@@ -497,7 +471,6 @@ SUB handleGUI ()
     FOR indx = 0 TO UBOUND(__gmGuiFields)
       __gmGuiFields(indx).buttonState = cFZX_MOUSE_NONE
       IF guiBtnId = __gmGuiFields(indx).buttonId THEN
-
         IF __fzxInputDevice.mouse.b1.doubleClick THEN
           __gmGuiFields(indx).buttonState = cFZX_MOUSE_DOUBLECLICK ' Double Clicked -- This probably wont work unless button state 2 is ignored
         ELSE IF __fzxInputDevice.mouse.b1.PosEdge THEN
@@ -506,9 +479,31 @@ SUB handleGUI ()
             __gmGuiFields(indx).buttonState = cFZX_MOUSE_HOVER ' Hover over Button
           END IF
         END IF
-
       END IF
+
+
       SELECT CASE __gmGuiFields(indx).menuType
+        CASE cGUI_LAYOUT_HUD
+          'IF __gmGuiFields(indx).Id = "fConsole" THEN
+          '  _PUTIMAGE (__gmGuiFields(indx).position.x, __gmGuiFields(indx).position.y), __gmConsole.img,
+          'END IF
+          IF guiBtnId = 1 AND __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
+            'IF __fzxInputDevice.mouse.hoverOver THEN
+            moveEntity __gmEntity(playerId), __fzxInputDevice.mouse.worldPosition, tilemap
+            fzxFSMChangeState __fzxCamera.fsm, cFSM_CAMERA_IDLE
+            'END IF
+          END IF
+
+          IF __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
+            SELECT CASE guiBtnId
+              CASE 61 '  scroll down
+                __gmConsole.yPos = __gmConsole.yPos + tilemap.tileHeight: IF __gmConsole.yPos > _HEIGHT(__gmConsole.img) THEN __gmConsole.yPos = _HEIGHT(__gmConsole.img)
+              CASE 62 ' scroll up
+                __gmConsole.yPos = __gmConsole.yPos - tilemap.tileHeight: IF __gmConsole.yPos < 0 THEN __gmConsole.yPos = 0
+            END SELECT
+          END IF
+        CASE cGUI_LAYOUT_HUD_LARGE_CONSOLE
+
         CASE cGUI_LAYOUT_LOOT
           IF __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
             SELECT CASE guiBtnId
@@ -572,8 +567,7 @@ SUB handlePlayerInput (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSA
 
   IF __fzxInputDevice.keyboard.keyHitPosEdge = ASC("p") THEN
     fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_SETUP
-    fzxVector2DSet position, 100, 100
-    addMessage tile(), tilemap, message(), "COMBAT!", 1, position, 3.0
+    consoleOut tile(), tilemap, "Combat!"
   END IF
 
   IF 0 THEN ' disabled for now
@@ -613,8 +607,6 @@ SUB handlePlayerInput (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSA
           __fzxBody(__gmEntity(volumeControlID).objectID).fzx.position.x = __fzxBody(__gmEntity(volumeControlID).objectID).fzx.position.x - tilemap.tileWidth
         END IF
       CASE ELSE
-        moveEntity __gmEntity(playerId), __fzxInputDevice.mouse.worldPosition, tilemap
-        fzxFSMChangeState __fzxCamera.fsm, cFSM_CAMERA_IDLE
     END SELECT
   END IF
   IF __fzxInputDevice.mouse.b2.PosEdge THEN ' Move camera
@@ -760,6 +752,7 @@ FUNCTION handleMapChange (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tME
 END FUNCTION
 
 SUB updateGUI (gui AS LONG)
+  __gmEngine.gui.hud = gui
   IF __gmEngine.guiRefresh THEN
     __gmEngine.guiRefresh = 0
     DIM m AS tMESSAGE
@@ -1356,7 +1349,7 @@ END SUB
 '   Rendering
 '**********************************************************************************************
 SUB _______________RENDERING (): END SUB
-SUB renderBodies (__gmGuiFields() AS tGUI_FIELDS)
+SUB renderBodies (tilemap AS tTILEMAP)
   DIM AS LONG i, layer
   DIM hitcount AS LONG
   DIM AS tFZX_VECTOR2d viewPortSize, viewPortCenter, camUpLeft, BB
@@ -1438,6 +1431,20 @@ SUB renderBodies (__gmGuiFields() AS tGUI_FIELDS)
               _RGB32(255, 255, 255), B , &B0101010101010101
         __gmGuiFields(i).buttonState = cFZX_MOUSE_NONE
       END IF
+
+      SELECT CASE __gmEngine.gui.hud
+        CASE cGUI_LAYOUT_HUD
+          IF _TRIM$(__gmGuiFields(i).Id) = "fConsole" THEN
+            _DEST __gmEngine.displayScr
+            _PUTIMAGE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2)-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2, __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), __gmConsole.img, __gmEngine.displayScr, (0, __gmConsole.yPos)-(__gmConsole.xSize * tilemap.tileWidth, __gmConsole.ySize * tilemap.tileWidth + __gmConsole.yPos)
+          END IF
+        CASE cGUI_LAYOUT_HUD_LARGE_CONSOLE
+          IF _TRIM$(__gmGuiFields(i).Id) = "fConsoleLrg" THEN
+            _DEST __gmEngine.displayScr
+            _PUTIMAGE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2)-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2, __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), __gmConsole.img, __gmEngine.displayScr, (0, __gmConsole.yPos)-(__gmConsole.xSize * tilemap.tileWidth, __gmConsole.ySize * tilemap.tileWidth + __gmConsole.yPos)
+          END IF
+
+      END SELECT
     NEXT
   END IF
 END SUB
@@ -1451,6 +1458,7 @@ SUB initScreen (w AS LONG, h AS LONG, bbp AS LONG)
   __gmEngine.hiddenScr = _NEWIMAGE(w, h, bbp)
   __gmEngine.overlayScr = _NEWIMAGE(w, h, bbp)
   __gmEngine.gui.sensorMap = _NEWIMAGE(w, h, bbp)
+  __gmConsole.img = _NEWIMAGE(1024, 1024, 32)
   SCREEN __gmEngine.displayScr
 END SUB
 
@@ -2021,43 +2029,92 @@ END SUB
 '**********************************************************************************************
 '   GUI Handling
 '**********************************************************************************************
-
 SUB _______________GUI_MESSAGE_HANDLING (): END SUB
 SUB renderText (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, messageString AS STRING)
   message.scale = 1
   renderTextEx tile(), tilemap, message, messageString
 END SUB
 
-SUB consoleText
-  DIM AS LONG iter, l, lc, chunck
-  DIM AS STRING tempCon(100) ' temporary console broke up into lines
+SUB consoleOut (tile() AS tTILE, tilemap AS tTILEMAP, s AS STRING)
+  s = s + "_" 'CHR$(13)
+  MID$(__gmConsole.txt, lenTxt(__gmConsole.txt), LEN(s)) = s
+  consoleText tile(), tilemap
+  'SaveImage __gmConsole.img, _CWD$ + OSPathJoin + "console"
+  ' 4 is going to have to be replaced with the ysize of the console
+
+  __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - 4) * tilemap.tileHeight
+END SUB
+
+SUB consoleText (tile() AS tTILE, tilemap AS tTILEMAP)
+  DIM m AS tMESSAGE
+  DIM AS LONG iter, iter2, iter3, l, lc, chunck
+  DIM AS STRING ch, ch1, tempCon(100) ' temporary console broke up into lines
   l = lenTxt(__gmConsole.txt)
+  ' PRINT #__logfile, " LenTXT:"; l
   lc = 0 ' line count
+
   iter = 1: DO WHILE iter <= l
     chunck = __gmConsole.xSize 'how much text per line
-'    TODO : somewhere in here a check for special chracters needs to ber handled
 
     IF chunck + iter > l THEN 'if your at the last line set chunk to whats left
       chunck = l - iter
+      IF chunck < 1 THEN EXIT DO
     END IF
+    'check for carriage return
+    iter2 = 0: DO WHILE iter2 <= chunck
+      IF MID$(__gmConsole.txt, iter + iter2, 1) = "_" THEN
+        chunck = iter2 + 1
+        EXIT DO
+      END IF
+    iter2 = iter2 + 1: LOOP
     tempCon(lc) = MID$(__gmConsole.txt, iter, chunck)
+    'PRINT #__logfile, tempCon(lc)
+    ' Handle special characters
+    'iter2 = iter: DO WHILE iter2 <= iter + chunck
+    '  ch = MID$(__gmConsole.txt, iter2, 1)
+    '  IF ch = "~" THEN ' do not count the digits in the special character
+    '    DO
+    '      iter2 = iter2 + 1
+    '      ch1 = MID$(__gmConsole.txt, iter2, 1)
+    '    LOOP WHILE INSTR(ch1, "0123456789") AND iter2 < iter + 5
+    '  END IF
+    'iter2 = iter2 + 1: LOOP
     lc = lc + 1
     ' resize if more lines are needed
     IF lc > UBOUND(tempCon) THEN REDIM _PRESERVE tempCon(UBOUND(tempCon) + 100) AS STRING
   iter = iter + chunck: LOOP
+  __gmConsole.lc = lc
+  'PRINT #__logfile, " Lincount:"; lc
+  '_DEST __gmConsole.img
+  'CLS 1, __gmEngine.displayClearColor
+  m.baseImage = __gmConsole.img: fzxVector2DSet m.position, 0, 0: m.scale = 1: m.bgColor = __gmEngine.displayClearColor
+  iter = 0: DO WHILE iter <= lc
 
+    renderTextEx tile(), tilemap, m, tempCon(iter)
+    m.position.y = m.position.y + (tilemap.tileHeight * m.scale)
+    'PRINT #__logfile, " tpos:"; m.position.y
+  iter = iter + 1: LOOP
+  _DEST 0
 END SUB
 
 FUNCTION lenTxt (t AS STRING)
-  DIM iter AS LONG
+  DIM AS LONG iter, count
+  count = 1
   iter = 1: DO WHILE iter <= LEN(t) AND MID$(t, iter, 1) <> CHR$(0)
+    ' dont count the extra characters for the special character expression towards the tottal length.
+    'IF MID$(t, iter, 1) = "~" THEN
+    '  ' detect a special character and subtract the excess i.e. ~0601 becomes �
+    '  count = count - 4
+    'ELSE
+    count = count + 1
+    ' END IF
   iter = iter + 1: LOOP
-  lenTxt = iter
+  lenTxt = count
 END FUNCTION
 
 
 SUB renderTextEx (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, messageString AS STRING)
-  DIM AS LONG i, numberOfLines, linelengthCount, longestLine, ch, directchar, mw, mh, tw, th
+  DIM AS LONG i, numberOfLines, linelengthCount, longestLine, ch, directchar, mw, mh, tw, th, fnt
   DIM AS tFZX_VECTOR2d cursor
   numberOfLines = 1
   longestLine = 1
@@ -2069,7 +2126,7 @@ SUB renderTextEx (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, mes
       i = i + 5
       IF i > LEN(messageString) THEN EXIT FOR
     ELSE
-      IF ch = 95 THEN ' check for underscore
+      IF ch = 95 OR ch = 13 THEN ' check for underscore
         numberOfLines = numberOfLines + 1
         IF linelengthCount > longestLine THEN longestLine = linelengthCount
         linelengthCount = 0
@@ -2078,6 +2135,7 @@ SUB renderTextEx (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, mes
   NEXT
   IF linelengthCount > longestLine THEN longestLine = linelengthCount
 
+  ' Draw the actual text
   _DEST message.baseImage
   tw = tilemap.tileWidth * message.scale
   th = tilemap.tileHeight * message.scale
@@ -2089,17 +2147,19 @@ SUB renderTextEx (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, mes
     IF ch = 32 THEN
       cursor.x = cursor.x + tilemap.tileWidth * message.scale
     ELSE
-      IF ch = 95 THEN
+      IF ch = 95 OR ch = 13 THEN
         cursor.x = 0
         cursor.y = cursor.y + tilemap.tileHeight * message.scale
       ELSE
         IF ch = 126 THEN '~#####  is used to render tiles directly
           directchar = VAL(MID$(messageString, i + 1, 5))
-          _PUTIMAGE (cursor.x + message.position.x, cursor.y + message.position.y)-(tw + cursor.x + message.position.x, th + cursor.y + message.position.y), tile(directchar).t, message.baseImage
+          IF tile(directchar).t < -1 THEN _PUTIMAGE (cursor.x + message.position.x, cursor.y + message.position.y)-(tw + cursor.x + message.position.x, th + cursor.y + message.position.y), tile(directchar).t, message.baseImage
           i = i + 5
           IF i > LEN(messageString) THEN EXIT FOR
         ELSE
-          _PUTIMAGE (cursor.x + message.position.x, cursor.y + message.position.y)-(tw + cursor.x + message.position.x, th + cursor.y + message.position.y), __gmFont(ch).t, message.baseImage
+          fnt = __gmFont(ch).t
+          'PRINT #__logfile, "fnt:"; fnt; " img:"; message.baseImage; "   pos:"; cursor.x + message.position.x; "   "; cursor.y + message.position.y
+          IF fnt < -1 THEN _PUTIMAGE (cursor.x + message.position.x, cursor.y + message.position.y)-(tw + cursor.x + message.position.x, th + cursor.y + message.position.y), fnt, message.baseImage
         END IF
         cursor.x = cursor.x + tilemap.tileWidth * message.scale
       END IF
@@ -2122,7 +2182,7 @@ SUB prepMessage (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, mess
       i = i + 5
       IF i > LEN(messageString) THEN EXIT FOR
     ELSE
-      IF ch = 95 THEN ' check for underscore
+      IF ch = 95 OR ch = 13 THEN ' check for underscore
         numberOfLines = numberOfLines + 1
         IF linelengthCount > longestLine THEN longestLine = linelengthCount
         linelengthCount = 0
@@ -2141,7 +2201,7 @@ SUB prepMessage (tile() AS tTILE, tilemap AS tTILEMAP, message AS tMESSAGE, mess
 
   FOR i = 1 TO LEN(messageString)
     ch = ASC(MID$(UCASE$(messageString), i, 1))
-    IF ch = 95 THEN
+    IF ch = 95 OR ch = 13 THEN
       cursor.x = 0
       cursor.y = cursor.y + tilemap.tileHeight
     ELSE IF ch = 32 THEN ' this was added due to the XML parsing routines cannot handle a space as the return value of an argument.

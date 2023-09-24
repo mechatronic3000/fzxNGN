@@ -117,7 +117,7 @@
     <property name="BUTTON" type="int" value="117"/>
    </properties>
   </object>
-  <object id="41" name="fbINV_EQ_WEAPON" type="1" x="464" y="192" width="16" height="16">
+  <object id="41" name="fbINV_EQ_WEAPON" type="1" x="463.095" y="191.547" width="16" height="16">
    <properties>
     <property name="ACTIVATED_TILE" type="int" value="2087"/>
     <property name="BUTTON" type="int" value="118"/>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.1" orientation="orthogonal" renderorder="right-down" width="32" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="44">
+<map version="1.8" tiledversion="1.8.1" orientation="orthogonal" renderorder="right-down" width="32" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="45">
  <tileset firstgid="1" source="RougeLike.tsx"/>
  <layer id="1" name="Tile Layer 1" width="32" height="24">
   <properties>
@@ -33,14 +33,30 @@
 </data>
  </layer>
  <objectgroup id="2" name="Fields">
-  <object id="3" name="fNAME" type="2" x="16" y="16" width="192" height="16"/>
-  <object id="32" name="fAP" type="2" x="272" y="16" width="32" height="16"/>
-  <object id="37" name="fHP" type="2" x="368" y="16" width="48" height="16"/>
-  <object id="38" name="fHPMax" type="2" x="432" y="16" width="48" height="16"/>
-  <object id="39" name="fConsole" type="2" x="16" y="208.371" width="464" height="159.629"/>
-  <object id="40" name="fConsoleUp" type="2" x="480.632" y="208.371" width="16" height="16"/>
-  <object id="41" name="fConsoleDown" type="2" x="480" y="352" width="16" height="16"/>
-  <object id="42" name="fCondition" type="2" x="480" y="16" width="16" height="16"/>
-  <object id="43" name="fMinimize" type="2" x="240.308" y="192.921" width="16" height="16"/>
+  <object id="3" name="fNAME" type="3" x="16" y="16" width="192" height="16"/>
+  <object id="32" name="fAP" type="3" x="272" y="16" width="32" height="16"/>
+  <object id="37" name="fHP" type="3" x="368" y="16" width="48" height="16"/>
+  <object id="38" name="fHPMax" type="3" x="432" y="16" width="48" height="16"/>
+  <object id="39" name="fConsoleLrg" type="3" x="16" y="208.371" width="464" height="159.629"/>
+  <object id="40" name="fConsoleUp" type="3" x="480.632" y="208.371" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2089"/>
+    <property name="BUTTON" type="int" value="70"/>
+   </properties>
+  </object>
+  <object id="41" name="fConsoleDown" type="3" x="480" y="352.632" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2089"/>
+    <property name="BUTTON" type="int" value="71"/>
+   </properties>
+  </object>
+  <object id="42" name="fCondition" type="3" x="480" y="16" width="16" height="16"/>
+  <object id="43" name="fMinimize" type="3" x="240.308" y="192.921" width="16" height="16"/>
+  <object id="44" name="fbMapArea" type="3" x="16.4275" y="48.0188" width="480.819" height="144.688">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="0"/>
+    <property name="BUTTON" type="int" value="2"/>
+   </properties>
+  </object>
  </objectgroup>
 </map>

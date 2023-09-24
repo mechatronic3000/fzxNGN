@@ -134,6 +134,7 @@ $IF TYPEDEFS = UNDEFINED THEN
   END TYPE
 
   TYPE tGUI_MAPS ' the tile based maps used for the GUI
+    hud AS LONG ' current hud
     sensorMap AS LONG
 
     hudMap AS LONG
@@ -275,11 +276,14 @@ $IF TYPEDEFS = UNDEFINED THEN
 
   TYPE tCONSOLE
     img AS LONG
-    txt AS STRING * 32768
+    sPos AS tFZX_VECTOR2d ' Screen Position
+    sSize AS tFZX_VECTOR2d ' Screen Size
+    txt AS STRING * 32768 ' Buffer
     yPos AS LONG ' last viewable position in log (normally at the end)
     xSize AS LONG ' width of the currently viewable window . (in characters not pixels)
     ySize AS LONG ' height of the currently viewable window. (in characters not pixels)
     tSize AS LONG ' height of the font
+    lc AS LONG ' current line count
   END TYPE
 
 

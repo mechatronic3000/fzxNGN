@@ -27,4 +27,46 @@ $IF DEBUGLIB = UNDEFINED THEN
         PRINT #__logfile, USING fmt; value
     $END IF
   END SUB
+
+
+  SUB SaveImage (image AS LONG, filename AS STRING)
+    DIM bytesperpixel&, bpp&, x&, y&, cv&, px&, py&, f&
+    DIM AS LONG c, lastsource
+    DIM b$, padder$, r$, d$, ext$
+    bytesperpixel& = _PIXELSIZE(image&)
+    IF bytesperpixel& = 0 THEN PRINT "Text modes unsupported!": END
+    IF bytesperpixel& = 1 THEN bpp& = 8 ELSE bpp& = 24
+    x& = _WIDTH(image&)
+    y& = _HEIGHT(image&)
+    b$ = "BM????QB64????" + MKL$(40) + MKL$(x&) + MKL$(y&) + MKI$(1) + MKI$(bpp&) + MKL$(0) + "????" + STRING$(16, 0) 'partial BMP header info(???? to be filled later)
+    IF bytesperpixel& = 1 THEN
+      FOR c& = 0 TO 255 ' read BGR color settings from JPG image + 1 byte spacer(CHR$(0))
+        cv& = _PALETTECOLOR(c&, image&) ' color attribute to read.
+        b$ = b$ + CHR$(_BLUE32(cv&)) + CHR$(_GREEN32(cv&)) + CHR$(_RED32(cv&)) + CHR$(0) 'spacer byte
+      NEXT
+    END IF
+    MID$(b$, 11, 4) = MKL$(LEN(b$)) ' image pixel data offset(BMP header)
+    lastsource& = _SOURCE
+    _SOURCE image&
+    IF ((x& * 3) MOD 4) THEN padder$ = STRING$(4 - ((x& * 3) MOD 4), 0)
+    FOR py& = y& - 1 TO 0 STEP -1 ' read JPG image pixel color data
+      r$ = ""
+      FOR px& = 0 TO x& - 1
+        c& = POINT(px&, py&) 'POINT 32 bit values are large LONG values
+        IF bytesperpixel& = 1 THEN r$ = r$ + CHR$(c&) ELSE r$ = r$ + LEFT$(MKL$(c&), 3)
+      NEXT px&
+      d$ = d$ + r$ + padder$
+    NEXT py&
+    _SOURCE lastsource&
+    MID$(b$, 35, 4) = MKL$(LEN(d$)) ' image size(BMP header)
+    b$ = b$ + d$ ' total file data bytes to create file
+    MID$(b$, 3, 4) = MKL$(LEN(b$)) ' size of data file(BMP header)
+    IF LCASE$(RIGHT$(filename$, 4)) <> ".bmp" THEN ext$ = ".bmp"
+    f& = FREEFILE
+    OPEN filename$ + ext$ FOR OUTPUT AS #f&: CLOSE #f& ' erases an existing file
+    OPEN filename$ + ext$ FOR BINARY AS #f&
+    PUT #f&, , b$
+    CLOSE #f&
+  END SUB
+
 $END IF
