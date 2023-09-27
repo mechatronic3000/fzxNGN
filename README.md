@@ -9,3 +9,6 @@ The "fzxNGNBareBones.bas" is what it says a bare minimum implementation of the p
 
 There are increasing number of demos, most do not require assets. Enjoy!
 
+# Rougue Like
+My new rougelike game is also here. I will try to update this readme with more about it when time allows.
+
