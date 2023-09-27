@@ -52,10 +52,10 @@
   <object id="89" name="lmENTERLAB" type="LANDMARK" x="888" y="1228">
    <point/>
   </object>
-  <object id="91" name="drMAIN_MENU" type="DOOR" x="880" y="1248" width="16" height="16">
+  <object id="91" name="drMona" type="DOOR" x="880" y="1248" width="16" height="16">
    <properties>
     <property name="LANDMARK" value="lmTOWN2"/>
-    <property name="MAP" type="file" value="Main_Menu.tmx"/>
+    <property name="MAP" type="file" value="Mona.tmx"/>
     <property name="OPEN_CLOSED_LOCKED" type="int" value="0"/>
     <property name="TILE_CLOSED" type="int" value="539"/>
     <property name="TILE_OPEN" type="int" value="540"/>

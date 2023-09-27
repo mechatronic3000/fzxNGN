@@ -128,10 +128,10 @@
   <object id="89" name="lmPOINT_2" type="LANDMARK" x="999" y="1236.5">
    <point/>
   </object>
-  <object id="91" name="drMAIN_MENU" type="DOOR" x="992.5" y="1249" width="16" height="16">
+  <object id="91" name="drMona" type="DOOR" x="992.5" y="1249" width="16" height="16">
    <properties>
     <property name="LANDMARK" value="lmLEVEL_1"/>
-    <property name="MAP" type="file" value="Main_Menu.tmx"/>
+    <property name="MAP" type="file" value="Mona.tmx"/>
     <property name="OPEN_CLOSED_LOCKED" type="int" value="0"/>
     <property name="TILE_CLOSED" type="int" value="539"/>
     <property name="TILE_OPEN" type="int" value="540"/>

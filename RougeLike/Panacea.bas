@@ -44,7 +44,7 @@ OPTION _EXPLICIT
 '            The FSM still needs work
 '            Integrated Background Music for the menu
 ' 02-06-22 : Added in baked in lighting for the map.
-'            Added FSM functioanlity for Music
+'            Added FSM functionality for Music
 '            Added Landmarks
 ' 02-11-22 : Now able traverse Levels.
 ' 02-14-22 : Added Rigid Body Functionality (SLOW!!!!)
@@ -76,6 +76,7 @@ OPTION _EXPLICIT
 ' 09-18-23 : fixed the loot and inventory menus so they don't have to be updated
 '          : twice to display correct information.
 '          : AP now updates during combat mode.
+'      Moved most comments to the github
 '**********************************************************************************************
 'TODO:
 ' ûFix the loot and inventory menus so that they dont have to be updated twice
@@ -128,7 +129,7 @@ SUB main
   IF _FILEEXISTS(_TRIM$(__gmEngine.logFileName)) THEN KILL _TRIM$(__gmEngine.logFileName)
   OPEN _TRIM$(__gmEngine.logFileName) FOR OUTPUT AS __gmEngine.logFileNumber
 
-  __gmEngine.currentMap = "Main_Menu.tmx"
+  __gmEngine.currentMap = "Mona.tmx"
   __gmEngine.gui.hudMapFile = "hud.tmx"
   __gmEngine.gui.hudLrgConMapFile = "hudLrgCon.tmx"
   __gmEngine.gui.inventoryMapFile = "Inventory.tmx"
@@ -207,6 +208,7 @@ SUB buildScene (item() AS tITEM, container() AS tCONTAINER, tile() AS tTILE, til
   XMLGUI __gmEngine.gui.hudLrgConMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), context(), 0
 
   __gmEngine.gui.hud = cGUI_LAYOUT_HUD
+  __gmConsole.img = _NEWIMAGE(1024, 1024, 32)
 
   '********************************************************
   '   Load Items
@@ -294,11 +296,11 @@ SUB runScene (item() as titem,_
       __gmEngine.overlayEnable = TRUE
 
       __gmEngine.guiRefresh = TRUE
-      updateGUI cGUI_LAYOUT_HUD
+      updateGUI cGUI_LAYOUT_HUD, tilemap
 
     CASE cFSM_GAMEMODE_GAMEPLAY_SETUP
       __gmEngine.guiRefresh = TRUE
-      updateGUI __gmEngine.gui.hud ' cGUI_LAYOUT_HUD
+      updateGUI __gmEngine.gui.hud, tilemap ' cGUI_LAYOUT_HUD
       playerID = entityManagerID("PLAYER")
       moveCamera __fzxBody(__gmEntity(playerID).objectID).fzx.position
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
@@ -306,7 +308,7 @@ SUB runScene (item() as titem,_
       __gmConsole.ySize = 4
       __gmConsole.yPos = 0
       ' test wall of text
-      consoleOut tile(), tilemap, "Welcome to Mona!"
+      consoleOut tile(), tilemap, "~01409 Welcome to Mona! ~01409"
 
 
     CASE cFSM_GAMEMODE_GAMEPLAY:
@@ -341,7 +343,7 @@ SUB runScene (item() as titem,_
 
       clearScreen
       __gmEngine.guiRefresh = TRUE
-      updateGUI cGUI_LAYOUT_INVENTORY
+      updateGUI cGUI_LAYOUT_INVENTORY, tilemap
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_INVENTORY
 
     CASE cFSM_GAMEMODE_INVENTORY:
@@ -352,7 +354,7 @@ SUB runScene (item() as titem,_
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
         clearScreen
         __gmEngine.guiRefresh = TRUE
-        updateGUI cGUI_LAYOUT_HUD
+        updateGUI cGUI_LAYOUT_HUD, tilemap
       END IF
       renderBodies tilemap
 
@@ -360,7 +362,7 @@ SUB runScene (item() as titem,_
 
       clearScreen
       __gmEngine.guiRefresh = TRUE
-      updateGUI cGUI_LAYOUT_LOOT
+      updateGUI cGUI_LAYOUT_LOOT, tilemap
 
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_LOOTMENU
 
@@ -370,7 +372,7 @@ SUB runScene (item() as titem,_
       IF __fzxInputDevice.keyboard.keyHitPosEdge = 27 THEN
         clearScreen
         __gmEngine.guiRefresh = TRUE
-        updateGUI cGUI_LAYOUT_HUD
+        updateGUI cGUI_LAYOUT_HUD, tilemap
         fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
         __gmEntity(targetID).parameters.activated = 0
       END IF
@@ -409,7 +411,7 @@ SUB runScene (item() as titem,_
         NEXT
       NEXT
       __gmEngine.guiRefresh = 1
-      updateGUI cGUI_LAYOUT_HUD
+      updateGUI cGUI_LAYOUT_HUD, tilemap
       fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_COMBAT_PLAYER_TURN
 
     CASE cFSM_GAMEMODE_COMBAT_PLAYER_TURN:
@@ -473,7 +475,7 @@ SUB handleGUI (tilemap AS tTILEMAP)
       IF guiBtnId = __gmGuiFields(indx).buttonId THEN
         IF __fzxInputDevice.mouse.b1.doubleClick THEN
           __gmGuiFields(indx).buttonState = cFZX_MOUSE_DOUBLECLICK ' Double Clicked -- This probably wont work unless button state 2 is ignored
-        ELSE IF __fzxInputDevice.mouse.b1.PosEdge THEN
+        ELSE IF __fzxInputDevice.mouse.b1.button THEN
             __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK ' Button Clicked
           ELSE
             __gmGuiFields(indx).buttonState = cFZX_MOUSE_HOVER ' Hover over Button
@@ -498,7 +500,7 @@ SUB handleGUI (tilemap AS tTILEMAP)
               CASE 60 ' consoleswitch
                 __gmEngine.gui.hud = cGUI_LAYOUT_HUD_LARGE_CONSOLE
                 __gmEngine.guiRefresh = TRUE
-                updateGUI __gmEngine.gui.hud
+                updateGUI __gmEngine.gui.hud, tilemap
                 __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - __gmConsole.ySize) * 16 'tilemap.tileHeight
             END SELECT
           END IF
@@ -518,7 +520,7 @@ SUB handleGUI (tilemap AS tTILEMAP)
               CASE 72 ' console switch
                 __gmEngine.gui.hud = cGUI_LAYOUT_HUD
                 __gmEngine.guiRefresh = TRUE
-                updateGUI __gmEngine.gui.hud
+                updateGUI __gmEngine.gui.hud, tilemap
                 __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - __gmConsole.ySize) * 16 'tilemap.tileHeight
             END SELECT
           END IF
@@ -543,7 +545,7 @@ SUB handleGUI (tilemap AS tTILEMAP)
               CASE 255 ' exit
                 clearScreen
                 __gmEngine.guiRefresh = TRUE
-                updateGUI cGUI_LAYOUT_HUD
+                updateGUI cGUI_LAYOUT_HUD, tilemap
                 fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
                 __gmEntity(targetID).parameters.activated = 0
             END SELECT
@@ -770,7 +772,7 @@ FUNCTION handleMapChange (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tME
 
 END FUNCTION
 
-SUB updateGUI (gui AS LONG)
+SUB updateGUI (gui AS LONG, tilemap AS tTILEMAP)
   __gmEngine.gui.hud = gui
   IF __gmEngine.guiRefresh THEN
     __gmEngine.guiRefresh = 0
@@ -847,7 +849,7 @@ SUB updateGUI (gui AS LONG)
             ' TODO : this will have to be fixed later with a value from tile UDT
             __gmConsole.xSize = 58
             __gmConsole.ySize = 4
-
+            __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - __gmConsole.ySize) * tilemap.tileHeight
             SELECT CASE _TRIM$(__gmGuiFields(indx).Id)
               CASE "fNAME"
                 renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD), m, formatString$(__gmEntity(playerID).stats.nameString, 12)
@@ -863,7 +865,7 @@ SUB updateGUI (gui AS LONG)
             END IF
             __gmConsole.xSize = 58
             __gmConsole.ySize = 20
-
+            __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - __gmConsole.ySize) * tilemap.tileHeight
             SELECT CASE _TRIM$(__gmGuiFields(indx).Id)
               CASE "fNAME"
                 renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), m, formatString$(__gmEntity(playerID).stats.nameString, 12)
@@ -1108,7 +1110,7 @@ SUB handleEntitys (tile() AS tTILE, tilemap AS tTILEMAP)
                   END IF
                   ' update the hud after AP change
                   __gmEngine.guiRefresh = 1
-                  updateGUI __gmEngine.gui.hud 'cGUI_LAYOUT_HUD
+                  updateGUI __gmEngine.gui.hud, tilemap 'cGUI_LAYOUT_HUD
                 END IF
               END IF
           END SELECT
@@ -1248,6 +1250,43 @@ FUNCTION formatString$ (i AS STRING, length AS LONG)
   o = _TRIM$(i)
   l = LEN(o)
   formatString = o + STRING$(length - l - 1, " ")
+END FUNCTION
+
+FUNCTION charProp& (ch AS STRING)
+  DIM AS _BYTE ascii
+  DIM AS LONG o
+  ascii = ASC(LEFT$(ch, 1))
+  SELECT EVERYCASE ascii
+    CASE 48 TO 57
+      o = o OR cIsNumber
+    CASE 65 TO 90
+      o = o OR cIsAlpha
+      o = o OR cIsUpper
+    CASE 97 TO 122
+      o = o OR cIsAlpha
+      o = o OR cIsLower
+    CASE 32, 9
+      o = o OR cIsWhiteSpace
+    CASE 95
+      o = o OR cIsUnderscore
+    CASE 10, 13
+      o = o OR cIsCRLF
+    CASE 33, 43, 42, 45, 47, 60, 61, 62, 37, 94
+      o = o OR cIsOperator
+    CASE 33, 34, 39, 46, 58, 59, 63, 96
+      o = o OR cIsPunc
+    CASE 40, 41
+      o = o OR cIsParenthesis
+    CASE 0 TO 31
+      o = o OR cIsControl
+    CASE 128 TO 255
+      o = o OR cIsSpecial
+  END SELECT
+  charProp = o
+END FUNCTION
+
+FUNCTION isChar (ch AS STRING, query AS LONG)
+  isChar = charProp(ch) AND query
 END FUNCTION
 
 
@@ -1489,16 +1528,15 @@ SUB renderBodies (tilemap AS tTILEMAP)
   END IF
 END SUB
 
-SUB initScreen (w AS LONG, h AS LONG, bbp AS LONG)
+SUB initScreen (w AS LONG, h AS LONG, bpp AS LONG)
   _DELAY .5 ' Keeps from segfaulting when starting
 
   __gmEngine.renderPipeline = _MEMNEW(cSCREENLAYERS * 8)
 
-  __gmEngine.displayScr = _NEWIMAGE(w, h, bbp)
-  __gmEngine.hiddenScr = _NEWIMAGE(w, h, bbp)
-  __gmEngine.overlayScr = _NEWIMAGE(w, h, bbp)
-  __gmEngine.gui.sensorMap = _NEWIMAGE(w, h, bbp)
-  __gmConsole.img = _NEWIMAGE(1024, 1024, 32)
+  __gmEngine.displayScr = _NEWIMAGE(w, h, bpp)
+  __gmEngine.hiddenScr = _NEWIMAGE(w, h, bpp)
+  __gmEngine.overlayScr = _NEWIMAGE(w, h, bpp)
+  __gmEngine.gui.sensorMap = _NEWIMAGE(w, h, bpp)
   SCREEN __gmEngine.displayScr
 END SUB
 
@@ -2079,16 +2117,12 @@ SUB consoleOut (tile() AS tTILE, tilemap AS tTILEMAP, s AS STRING)
   s = s + "_" 'CHR$(13)
   MID$(__gmConsole.txt, lenTxt(__gmConsole.txt), LEN(s)) = s
   consoleText tile(), tilemap
-  'SaveImage __gmConsole.img, _CWD$ + OSPathJoin + "console"
-  ' 4 is going to have to be replaced with the ysize of the console
-
-  '  __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - 4) * tilemap.tileHeight
   __gmConsole.yPos = fzxScalarMax(0, __gmConsole.lc - __gmConsole.ySize) * tilemap.tileHeight
 END SUB
 
 SUB consoleText (tile() AS tTILE, tilemap AS tTILEMAP)
   DIM m AS tMESSAGE
-  DIM AS LONG iter, iter2, iter3, l, lc, chunck
+  DIM AS LONG iter, iter2, iter3, l, lc, chunck, bottom
   DIM AS STRING ch, ch1, tempCon(100) ' temporary console broke up into lines
   l = lenTxt(__gmConsole.txt)
   ' PRINT #__logfile, " LenTXT:"; l
@@ -2124,12 +2158,31 @@ SUB consoleText (tile() AS tTILE, tilemap AS tTILEMAP)
     ' resize if more lines are needed
     IF lc > UBOUND(tempCon) THEN REDIM _PRESERVE tempCon(UBOUND(tempCon) + 100) AS STRING
   iter = iter + chunck: LOOP
+
+  bottom = tilemap.tileHeight * m.scale * lc
+  IF bottom >= _HEIGHT(m.baseImage) THEN ' console text is larger than the image
+    iter = INT((bottom - _HEIGHT(m.baseImage)) / tilemap.tileHeight)
+    _DEST m.baseImage
+    CLS , m.bgColor
+    _DEST 0
+    lc = INT(_HEIGHT(m.baseImage) / tilemap.tileHeight)
+  ELSE
+    iter = 0
+  END IF
+
   __gmConsole.lc = lc
-  'PRINT #__logfile, " Lincount:"; lc
-  '_DEST __gmConsole.img
-  'CLS 1, __gmEngine.displayClearColor
   m.baseImage = __gmConsole.img: fzxVector2DSet m.position, 0, 0: m.scale = 1: m.bgColor = __gmEngine.displayClearColor
-  iter = 0: DO WHILE iter <= lc
+
+  bottom = tilemap.tileHeight * m.scale * lc
+  IF bottom >= _HEIGHT(m.baseImage) THEN ' console text is larger than the image
+    iter = INT((bottom - _HEIGHT(m.baseImage)) / tilemap.tileHeight)
+    _DEST m.baseImage
+    CLS , m.bgColor
+    _DEST 0
+  ELSE
+    iter = 0
+  END IF
+  DO WHILE iter <= lc
 
     renderTextEx tile(), tilemap, m, tempCon(iter)
     m.position.y = m.position.y + (tilemap.tileHeight * m.scale)
@@ -2141,15 +2194,18 @@ END SUB
 FUNCTION lenTxt (t AS STRING)
   DIM AS LONG iter, count
   count = 1
+  ' QB64 UDT strings have a fixed length set at initialization
+  ' so we need to find the end which is null terminated
   iter = 1: DO WHILE iter <= LEN(t) AND MID$(t, iter, 1) <> CHR$(0)
     ' dont count the extra characters for the special character expression towards the tottal length.
     'IF MID$(t, iter, 1) = "~" THEN
-    '  ' detect a special character and subtract the excess i.e. ~0601 becomes Å
-    '  count = count - 4
+    '  '  ' detect a special character and subtract the excess i.e. ~00601 becomes Å
+    '  count = count - 3
     'ELSE
     count = count + 1
     ' END IF
   iter = iter + 1: LOOP
+  IF count < 1 THEN count = 1
   lenTxt = count
 END FUNCTION
 
@@ -3168,4 +3224,7 @@ FUNCTION OSPathJoin$
       OSPathJoin$ = "/"
   END SELECT
 END FUNCTION
+
+
+
 

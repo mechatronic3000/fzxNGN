@@ -90,5 +90,20 @@ $IF CONSTANTS = UNDEFINED THEN
   CONST cGUI_LAYOUT_HUD = 2
   CONST cGUI_LAYOUT_HUD_LARGE_CONSOLE = 3
 
+  CONST cIsUnknown = 0
+  CONST cIsAlpha = 1
+  CONST cIsUpper = 2
+  CONST cIsLower = 4
+  CONST cIsNumber = 8
+  CONST cIsWhiteSpace = 16
+  CONST cIsOperator = 32
+  CONST cIsPunc = 64
+  CONST cIsCRLF = 128
+  CONST cIsParenthesis = 256
+  CONST cIsControl = 512
+  CONST cIsSpecial = 1024
+  const cIsUnderscore = 2048
+
+
 
 $END IF
