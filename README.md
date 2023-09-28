@@ -9,5 +9,19 @@ The "fzxNGNBareBones.bas" is what it says a bare minimum implementation of the p
 
 There are increasing number of demos, most do not require assets. Enjoy!
 
+
+
+![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/fzxNGNDemoSS/BareBones.jpg)
+
+![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/fzxNGNDemoSS/Screenshot.jpg)
+
+![ANIM](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/fzxNGNDemoSS/cuttingboard.gif)
+
 # Rouge Like
 My new rouge-like game is also here. I will try to update this readme with more about it when time allows.
+
+
+
+![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/Rouge-Like/Panacea10.jpg)
+![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/Rouge-Like/Panacea11.jpg)
+
