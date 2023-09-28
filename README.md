@@ -25,3 +25,14 @@ My new rouge-like game is also here. I will try to update this readme with more 
 ![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/Rouge-Like/Panacea10.jpg)
 ![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/Rouge-Like/Panacea11.jpg)
 
+
+Written in QB64. https://qb64phoenix.com/forum/index.php
+
+Used TILED as a level editor https://www.mapeditor.org/ 
+
+Graphics are provided be Kenney at www.kenney.nl
+
+Music is provided by Eric Matyas at www.soundimage.org
+
+
+
