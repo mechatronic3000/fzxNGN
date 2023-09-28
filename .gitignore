@@ -75,3 +75,7 @@ RougeLike/Assets/Music/*.mp3
 fzxDemo/constraintConverter
 
 fzxDemo/fzxNGNFieldConstraint
+
+RougeLike/logs/
+
+RougeLike/Saves/

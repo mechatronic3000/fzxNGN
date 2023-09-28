@@ -76,7 +76,9 @@ OPTION _EXPLICIT
 ' 09-18-23 : fixed the loot and inventory menus so they don't have to be updated
 '          : twice to display correct information.
 '          : AP now updates during combat mode.
-'      Moved most comments to the github
+'
+'    ------  Moved comments to the github ------
+'
 '**********************************************************************************************
 'TODO:
 ' ûFix the loot and inventory menus so that they dont have to be updated twice
