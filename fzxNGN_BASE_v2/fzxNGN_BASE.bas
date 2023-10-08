@@ -1166,12 +1166,12 @@ SUB fzxImpulseStep
   __fzxStats.numberOfJoints = 0
   __fzxStats.numberOfStaticBodies = 0
 
-  i = 0: DO WHILE i < uB
+  i = 0: DO WHILE i <= uB
     A = __fzxBody(i)
     IF A.enable THEN
       __fzxStats.numberOfBodies = __fzxStats.numberOfBodies + 1
       IF A.fzx.invMass = 0.0 THEN __fzxStats.numberOfStaticBodies = __fzxStats.numberOfStaticBodies + 1
-      j = i + 1: DO WHILE j < uB
+      j = i + 1: DO WHILE j <= uB
         B = __fzxBody(j)
         ' B enabled ?
         IF B.enable THEN
@@ -1225,8 +1225,8 @@ SUB fzxImpulseStep
     IF __fzxBody(i).enable AND __fzxBody(i).noPhysics = 0 THEN fzxImpulseIntegrateForces i
   i = i + 1: LOOP
   '    Initialize collision
-  i = 0: DO WHILE i < manifoldCount
-    k = 0: DO WHILE k < manifolds(i).contactCount
+  i = 0: DO WHILE i <= manifoldCount
+    k = 0: DO WHILE k <= manifolds(i).contactCount
       contacts(k) = collisions(i, k)
     k = k + 1: LOOP
     fzxManifoldInit manifolds(i), contacts()
@@ -1239,8 +1239,8 @@ SUB fzxImpulseStep
 
   ' Solve collisions
   j = 0: DO WHILE j < __fzxWorld.iterations
-    i = 0: DO WHILE i < manifoldCount
-      k = 0: DO WHILE k < manifolds(i).contactCount
+    i = 0: DO WHILE i <= manifoldCount
+      k = 0: DO WHILE k <= manifolds(i).contactCount
         contacts(k) = collisions(i, k)
       k = k + 1: LOOP
       fzxManifoldApplyImpulse manifolds(i), contacts()
@@ -1281,11 +1281,11 @@ SUB fzxImpulseStep
   j = j + 1: LOOP
 
   '// Integrate velocities
-  i = 0: DO WHILE i < uB
+  i = 0: DO WHILE i <= uB
     IF __fzxBody(i).enable AND NOT __fzxBody(i).noPhysics THEN fzxImpulseIntegrateVelocity i
   i = i + 1: LOOP
   '// Correct positions
-  i = 0: DO WHILE i < manifoldCount
+  i = 0: DO WHILE i <= manifoldCount
     fzxManifoldPositionalCorrection manifolds(i)
   i = i + 1: LOOP
   '// Clear all forces
@@ -1555,12 +1555,15 @@ END SUB
 '   Collision Tools
 '**********************************************************************************************
 SUB _______________COLLISION_QUERY_TOOLS: END SUB
+
+' if nothing is colliding the it returns a -1 else it returns the index in __fzxHits array
+
 FUNCTION fzxIsBodyTouchingBody (A AS LONG, B AS LONG)
   DIM hitcount AS LONG: hitcount = 0
   DIM AS LONG uH: uH = UBOUND(__fzxHits)
   fzxIsBodyTouchingBody = -1
   DO WHILE hitcount <= uH '    FOR hitcount = 0 TO UBOUND(hits)
-    IF __fzxHits(hitcount).A = A AND __fzxHits(hitcount).B = B THEN
+    IF (__fzxHits(hitcount).A = A AND __fzxHits(hitcount).B = B) OR (__fzxHits(hitcount).A = B AND __fzxHits(hitcount).B = A) THEN
       fzxIsBodyTouchingBody = hitcount
       EXIT FUNCTION
     END IF
