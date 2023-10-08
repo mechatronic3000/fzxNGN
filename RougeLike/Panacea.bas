@@ -100,6 +100,7 @@ main
 '$include:'libs\memArrays.bm'
 '$include:'libs\strArrays.bm'
 '$include:'libs\debug.bm'
+'$include:'libs\rpgFunctions.bm'
 
 '**********************************************************************************************
 '   Main Loop
@@ -117,7 +118,7 @@ SUB main
   STATIC tile(0) AS tTILE
 
 
-  STATIC item(0) AS tITEM
+  STATIC archtype(0) AS tARCHTYPE
   STATIC container(0) AS tCONTAINER
 
   _TITLE "Panacea"
@@ -136,11 +137,11 @@ SUB main
   __gmEngine.gui.hudLrgConMapFile = "hudLrgCon.tmx"
   __gmEngine.gui.inventoryMapFile = "Inventory.tmx"
   __gmEngine.gui.lootMapFile = "Loot.tmx"
-  __gmEngine.itemListFilename = "Items.xml"
+  __gmEngine.itemListFilename = "archetypes.xml"
 
   initScreen 1024, 768, 32
   fzxInitFPS
-  buildScene item(),_
+  buildScene archtype(),_
              container(),_
              tile(), _
              tileMap, _
@@ -148,7 +149,7 @@ SUB main
 
 
   DO
-    runScene item(),_
+    runScene archtype(),_
              container(),_
              tile(), _
              tileMap, _
@@ -172,7 +173,7 @@ END SUB
 '**********************************************************************************************
 SUB _______________BUILD_SCENE (): END SUB
 
-SUB buildScene (item() AS tITEM, container() AS tCONTAINER, tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSAGE)
+SUB buildScene (arch() AS tARCHTYPE, container() AS tCONTAINER, tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSAGE)
 
   _MOUSEHIDE
   __gmOptions.musicVolume = .05
@@ -216,7 +217,7 @@ SUB buildScene (item() AS tITEM, container() AS tCONTAINER, tile() AS tTILE, til
   '   Load Items
   '********************************************************
   XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.itemListFilename), context()
-  itemsInitialize item(), context()
+  archTypeInitialize arch(), context()
 
   initInputDevice tile(idToTile(tile(), 516 + 1)).t
 
@@ -235,7 +236,7 @@ END SUB
 '   Scene Handling
 '**********************************************************************************************
 SUB _______________RUN_SCENE (): END SUB
-SUB runScene (item() as titem,_
+SUB runScene (arch() as tarchtype,_
               container as tcontainer,_
               tile() AS tTILE, _
               tilemap AS tTILEMAP, _
@@ -763,7 +764,7 @@ FUNCTION handleMapChange (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tME
     findLandmarkPositionHash __gmLandmark(), tempDoor.landmarkHash, tempVec
     fzxSetBody cFZX_PARAMETER_POSITION, __gmEntity(playerId).objectID, tempVec.x, tempVec.y
     moveCamera __fzxBody(__gmEntity(playerId).objectID).fzx.position
-
+    fzxCalculateFOV
     'PRINT #__logfile, "PlayerEntityId: "; playerId; "  playerBodyID: "; playerBodyId
     'PRINT #__logfile, "New Map: "; _TRIM$(__gmEngine.currentMap)
     'PRINT #__logfile, "Landmark: "; __gmLandmark(findLandmarkHash(__gmLandmark(), tempDoor.landmarkHash)).landmarkName
@@ -967,14 +968,15 @@ SUB moveEntity (entity AS tENTITY, endPos AS tFZX_VECTOR2d, tilemap AS tTILEMAP)
 END SUB
 
 SUB handleEntitys (tile() AS tTILE, tilemap AS tTILEMAP)
-  DIM AS LONG index, iD, playerID, mouseID, playerTouching, mouseTouching
+  DIM AS LONG index, iD, playerID, mouseID, playerTouching, mouseTouching, hitP, hitM, hitPa, hitPb, hitMa, hitMb, mtest
+  DIM AS _BYTE sameTouch
   DIM AS _FLOAT progress
   DIM AS STRING dir
   DIM AS tFZX_VECTOR2d temp
 
-  playerID = entityManagerID("PLAYER")
-  mouseID = entityManagerID("_mouse")
-
+  playerID = fzxBodyManagerID("PLAYER")
+  '  mouseID = fzxBodyManagerID("_mouse")
+  mouseID = __fzxInputDevice.mouse.mouseBody
   IF playerID < 0 THEN
     PRINT "Player does not exist!": END
   END IF
@@ -992,18 +994,32 @@ SUB handleEntitys (tile() AS tTILE, tilemap AS tTILEMAP)
     '  fzxSetBody p(), body(), cFZX_PARAMETER_TEXTURE, iD, tile(__gmEntity(index).parameters.normalTile).t, 0
     'END IF
 
+    ' fzxisbodytouchingbody returns -1 for not bodies touching and the index of the fzxhits array if it is touching
 
-    IF NOT fzxIsBodyTouchingBody(__gmEntity(playerID).objectID, iD) AND iD <> playerID THEN
+    hitP = fzxIsBodyTouchingBody(playerID, iD)
+    IF hitP > -1 THEN
+      hitPa = __fzxHits(hitP).A: hitPb = __fzxHits(hitP).B
+    END IF
+
+    hitM = fzxIsBodyTouchingBody(mouseID, iD)
+    IF hitM > -1 THEN
+      hitMa = __fzxHits(hitM).A: hitMb = __fzxHits(hitM).B
+    END IF
+    ' is the player and the mouse touching the same thing?
+    sameTouch = (hitM > -1 AND hitP > -1) AND (hitMa = iD OR hitMb = iD) AND (hitPa = iD OR hitPb = iD)
+
+    IF hitP > -1 AND iD <> playerID THEN
       playerTouching = -1
     ELSE
       playerTouching = 0
     END IF
 
-    IF NOT fzxIsBodyTouchingBody(mouseID, iD) THEN
+    IF hitM > -1 THEN
       mouseTouching = -1
     ELSE
       mouseTouching = 0
     END IF
+
 
     ' If entity is moving then
     '  - Primary FSM is for moving the whole trip
@@ -1021,20 +1037,23 @@ SUB handleEntitys (tile() AS tTILE, tilemap AS tTILEMAP)
             CASE cENTITY_BEHAVIOR_CONTAINER
               IF __gmEngine.gameMode.currentState <> cFSM_GAMEMODE_LOOTMENU_SETUP AND __gmEngine.gameMode.currentState <> cFSM_GAMEMODE_LOOTMENU THEN
                 'need to make sure player and mouse are touching the same thing
-                IF __fzxInputDevice.mouse.b1.PosEdge AND playerTouching AND mouseTouching AND NOT __gmEntity(index).parameters.activated THEN
-                  __gmEntity(playerID).parameters.target = index
-                  __gmEntity(index).parameters.activated = NOT __gmEntity(index).parameters.activated
+                IF __fzxInputDevice.mouse.b1.PosEdge THEN
+                  IF sameTouch THEN
+                    IF NOT __gmEntity(index).parameters.activated THEN
+                      __gmEntity(playerID).parameters.target = index
+                      __gmEntity(index).parameters.activated = NOT __gmEntity(index).parameters.activated
 
-                  IF __gmEntity(index).parameters.activated THEN
-                    fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_LOOTMENU_SETUP
-                    fzxSetBody cFZX_PARAMETER_TEXTURE, iD, tile(__gmEntity(index).parameters.activatedTile).t, 0
-                    findAdjacentTile tilemap, playerID, temp
-                    fzxSetBody cFZX_PARAMETER_POSITION, playerID, temp.x, temp.y
-                    EXIT SUB
-                  ELSE
-                    fzxSetBody cFZX_PARAMETER_TEXTURE, iD, tile(__gmEntity(index).parameters.normalTile).t, 0
+                      IF __gmEntity(index).parameters.activated THEN
+                        fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_LOOTMENU_SETUP
+                        fzxSetBody cFZX_PARAMETER_TEXTURE, iD, tile(__gmEntity(index).parameters.activatedTile).t, 0
+                        ' findAdjacentTile tilemap, playerID, temp
+                        ' fzxSetBody cFZX_PARAMETER_POSITION, playerID, temp.x, temp.y
+                        EXIT SUB
+                      ELSE
+                        fzxSetBody cFZX_PARAMETER_TEXTURE, iD, tile(__gmEntity(index).parameters.normalTile).t, 0
+                      END IF
+                    END IF
                   END IF
-
                 END IF
               END IF
           END SELECT
@@ -1146,17 +1165,17 @@ END SUB
 '**********************************************************************************************
 SUB _______________INVENTORY: END SUB
 
-SUB itemsInitialize (item() AS tITEM, con() AS tFZX_STRINGTUPLE)
+SUB archTypeInitialize (arch() AS tARCHTYPE, con() AS tFZX_STRINGTUPLE)
   DIM AS LONG index, uB
   DIM AS STRING contextName, argument
   FOR index = 0 TO UBOUND(con) - 1
     contextName = trim$(con(index).contextName)
     argument = trim$(con(index).arg)
 
-    uB = UBOUND(item)
+    uB = UBOUND(arch)
     SELECT CASE contextName
       CASE "items item"
-        addItemEx item(), _
+        addArchtypeEx arch(), _
         getXMLArgString(argument, " name="), _
         getXMLArgValue(argument, " category="), _
         getXMLArgValue(argument, " id="), _
@@ -1168,8 +1187,8 @@ SUB itemsInitialize (item() AS tITEM, con() AS tFZX_STRINGTUPLE)
   NEXT
 END SUB
 ' Items are general and not specific to whats in the inventory i.e. short sword
-SUB addItemEx (item() AS tITEM, n AS STRING, id AS LONG, itemType AS LONG, sp AS LONG, weight AS SINGLE, level AS LONG, stackCount AS LONG)
-  DIM i AS tITEM
+SUB addArchtypeEx (arch() AS tARCHTYPE, n AS STRING, id AS LONG, itemType AS LONG, sp AS LONG, weight AS SINGLE, level AS LONG, stackCount AS LONG)
+  DIM i AS tARCHTYPE
   i.nameString = n
   i.id = id
   i.itemType = itemType
@@ -1177,23 +1196,23 @@ SUB addItemEx (item() AS tITEM, n AS STRING, id AS LONG, itemType AS LONG, sp AS
   i.weight = weight
   i.level = level
   i.stackCount = stackCount
-  addItem item(), i
+  addArchtype arch(), i
 END SUB
 
-SUB addItem (item() AS tITEM, itemI AS tITEM)
-  item(UBOUND(item)) = itemI
-  REDIM _PRESERVE item(UBOUND(item) + 1) AS tITEM
+SUB addArchtype (archtype() AS tARCHTYPE, itemI AS tARCHTYPE)
+  archtype(UBOUND(archtype)) = itemI
+  REDIM _PRESERVE archtype(UBOUND(archtype) + 1) AS tARCHTYPE
 END SUB
 
-FUNCTION addItemToContainer (item() AS tITEM, container AS tCONTAINER, itemIndx AS LONG)
+FUNCTION addItemToContainer (arch() AS tARCHTYPE, container AS tCONTAINER, itemIndx AS LONG)
   DIM AS LONG indx, id, cnt, qty
-  ' See if item is already in inventory
+  ' See if archtype is already in inventory
   FOR indx = 1 TO container.lItemCount
     id = readArrayLong(container.lItemId, indx)
-    IF id = item(itemIndx).id THEN ' id is specific to the item
+    IF id = arch(itemIndx).id THEN ' id is specific to the item
       qty = readArrayLong(container.lItemQty, indx)
       ' make sure it does not exceed stack counts
-      IF qty <= item(itemIndx).stackCount THEN
+      IF qty <= arch(itemIndx).stackCount THEN
         qty = qty + 1
         setArrayLong container.lItemQty, indx, qty
         EXIT FUNCTION
@@ -1201,8 +1220,8 @@ FUNCTION addItemToContainer (item() AS tITEM, container AS tCONTAINER, itemIndx 
     END IF
   NEXT
   ' Presumably this the first of this item in the inventory
-  setArrayLong container.lItemId, container.lItemCount, item(itemIndx).id
-  setArrayLong container.lItemType, container.lItemCount, item(itemIndx).itemType
+  setArrayLong container.lItemId, container.lItemCount, arch(itemIndx).id
+  setArrayLong container.lItemType, container.lItemCount, arch(itemIndx).itemType
   setArrayLong container.lItemQty, container.lItemCount, 1
   container.lItemCount = container.lItemCount + 1
 
@@ -1389,7 +1408,7 @@ SUB handleInputDevice (tilemap AS tTILEMAP)
   fzxHandleInputDevice
   IF __fzxInputDevice.mouse.mouseMode AND __fzxInputDevice.mouse.mouseOnScreen THEN
     'Mouse screen position to world
-    fzxVector2DSet mouse, __fzxInputDevice.mouse.position.x, __fzxInputDevice.mouse.position.y
+    'fzxVector2DSet mouse, __fzxInputDevice.mouse.position.x, __fzxInputDevice.mouse.position.y
     '    fzxCameratoWorldScEx  mouse, iDevice.mouse.worldPosition
     vector2dToGameMapXY tilemap, __fzxInputDevice.mouse.worldPosition, __fzxInputDevice.mouse.gamePosition
     fzxSetBody cFZX_PARAMETER_POSITION, __fzxInputDevice.mouse.mouseBody, __fzxInputDevice.mouse.worldPosition.x, __fzxInputDevice.mouse.worldPosition.y
@@ -1441,7 +1460,7 @@ SUB renderBodies (tilemap AS tTILEMAP)
   fzxVector2DSet viewPortCenter, _WIDTH / 2.0, _HEIGHT / 2.0
   fzxVector2DSubVectorND camUpLeft, __fzxCamera.position, viewPortCenter
   FOR layer = 3 TO 0 STEP -1 ' Crude layering from rear to front
-    FOR i = 0 TO UBOUND(__fzxBody) - 1
+    FOR i = 0 TO UBOUND(__fzxBody)
       IF __fzxBody(i).shape.renderOrder = layer THEN
         IF __fzxBody(i).enable THEN
           'AABB to cut down on rendering objects out of camera view
@@ -1540,6 +1559,8 @@ SUB initScreen (w AS LONG, h AS LONG, bpp AS LONG)
   __gmEngine.overlayScr = _NEWIMAGE(w, h, bpp)
   __gmEngine.gui.sensorMap = _NEWIMAGE(w, h, bpp)
   SCREEN __gmEngine.displayScr
+  _SCREENMOVE _MIDDLE
+
 END SUB
 
 SUB clearScreen

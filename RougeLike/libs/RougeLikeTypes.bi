@@ -46,7 +46,7 @@ $IF TYPEDEFS = UNDEFINED THEN
     glText AS _INTEGER64
   END TYPE
 
-  TYPE tITEM ' generalize archtype, not the exact inventory item
+  TYPE tARCHTYPE
     id AS LONG
     sprite AS LONG
     nameString AS STRING * 64
@@ -87,7 +87,7 @@ $IF TYPEDEFS = UNDEFINED THEN
     manaMax AS LONG
     hunger AS SINGLE
     thirst AS SINGLE
-    inventory AS tCONTAINER
+
     gold AS LONG
     ' Base stats
     '***********************
@@ -118,6 +118,7 @@ $IF TYPEDEFS = UNDEFINED THEN
     fsmPrimary AS tFZX_FSM
     fsmSecondary AS tFZX_FSM
     stats AS tENTITYSTATS
+    inventory AS tCONTAINER
   END TYPE
 
   TYPE tMESSAGE

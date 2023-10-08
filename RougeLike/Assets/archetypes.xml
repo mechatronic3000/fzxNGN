@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<items>
+  <item name="GOLD"               id="1" category="9999" sprite="233"  weight="0" flavortext="Yay Money"          level="0" stackCount="99999"/>
+  <item name="dagger"             id="2" category="1"    sprite="320"  weight="0" flavortext="Dagger"             level="0" stackCount="1"/>
+  <item name="short broad sword"  id="3" category="1"    sprite="321"  weight="0" flavortext="Short Broad Sword"  level="0" stackCount="1"/>
+  <item name="short sword"        id="4" category="1"    sprite="321"  weight="0" flavortext="Short Sword"        level="0" stackCount="1"/>
+  <item name="helmet"             id="5" category="2"    sprite="32"   weight="0" flavortext="Helmet"             level="0" stackCount="1"/>
+  <item name="body armor"         id="6" category="3"    sprite="80"   weight="0" flavortext="Body Armor"         level="0" stackCount="1"/>
+  <item name="boots"              id="7" category="4"    sprite="39"   weight="0" flavortext="Boots"              level="0" stackCount="1"/>
+  <item name="sheild"             id="8" category="5"    sprite="133"  weight="0" flavortext="Shield"             level="0" stackCount="1"/>
+</items>
+
+
