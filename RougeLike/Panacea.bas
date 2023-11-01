@@ -1,4 +1,4 @@
-' Panacea v0.1
+' Panacea v0.2
 
 $RESIZE:OFF
 OPTION _EXPLICIT
