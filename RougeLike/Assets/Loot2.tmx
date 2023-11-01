@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.8" tiledversion="1.8.1" orientation="orthogonal" renderorder="right-down" width="32" height="24" tilewidth="16" tileheight="16" infinite="0" nextlayerid="3" nextobjectid="46">
+ <tileset firstgid="1" source="RougeLike.tsx"/>
+ <layer id="1" name="Tile Layer 1" width="32" height="24">
+  <properties>
+   <property name="Field" type="object" value="0"/>
+  </properties>
+  <data encoding="csv">
+1709,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,1712,1610614442,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,1769,2684356269,
+1706,1967,2005,2005,2010,1057,1057,1057,1057,1057,1068,1068,1057,1057,1057,1057,1057,1057,1057,1057,1057,1706,1057,1389,1057,1057,1090,1057,1057,1437,1057,1706,
+1610614448,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356272,1264,2684355823,2684355824,1264,2684355823,2684355824,1264,2684355823,2684355824,1706,
+1706,1057,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1057,1706,1263,1057,1263,1263,1057,1263,1263,1057,1263,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1610614000,2040,3221226736,1610614000,2040,3221226736,1610614000,2040,3221226736,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1057,1706,1057,1099,1057,1057,1137,1057,1057,1099,1057,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1264,2684355823,2684355824,1264,2684355823,2684355824,1264,2684355823,2684355824,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1263,1057,1263,1263,1057,1263,1263,1057,1263,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1610614000,2040,3221226736,1610614000,2040,3221226736,1610614000,2040,3221226736,1706,
+1706,1057,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1057,1286,1057,1057,1096,1057,1057,1425,1057,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1264,2684355823,2684355824,1264,2684355823,2684355824,1264,2684355823,2684355824,1706,
+1610614448,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356272,1263,1057,1263,1263,1057,1263,1263,1057,1263,1706,
+1706,1964,2004,2012,1960,2004,2010,2005,2008,2015,1057,1057,1057,1057,1057,1057,1057,1057,1057,2093,2095,1706,1610614000,2040,3221226736,1610614000,2040,3221226736,1610614000,2040,3221226736,1706,
+1610614448,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356272,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356272,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,2040,1057,1057,1057,1057,1057,1057,1057,1057,1057,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1057,1057,1057,1057,1057,1057,1057,1057,1057,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1057,1057,1057,1057,1057,1057,1057,1057,1057,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1057,1057,1057,1057,1057,1057,1057,1057,1057,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1057,1057,1057,1057,1057,1057,1057,1057,1057,1706,
+1706,1057,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1057,1057,1057,1057,1057,1057,1057,1057,1057,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1610614448,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356272,
+1706,1057,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1706,1057,1057,1057,1962,2005,1967,1959,1057,1057,1706,
+1706,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1060,1057,1057,2042,1057,1290,1908,1908,1908,1908,1908,1908,1057,1706,
+1610614445,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,3221227184,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,2684356266,3221227181
+</data>
+ </layer>
+ <objectgroup id="2" name="Fields">
+  <object id="10" name="fGOLD" type="1" x="384" y="352" width="96" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="11" name="fEQ_HELMET" type="1" x="368" y="48" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="12" name="fEQ_RING" type="1" x="416" y="48" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="13" name="fEQ_NECKLACE" type="1" x="464" y="48" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="14" name="fEQ_RIGHT_GLOVE" type="1" x="368" y="112" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="15" name="fEQ_ARMOR" type="1" x="416" y="112" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="16" name="fEQ_LEFT_GLOVE" type="1" x="464" y="112" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="17" name="fEQ_SHIELD" type="1" x="368" y="176" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="18" name="fEQ_BOOTS" type="1" x="416" y="176" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="19" name="fEQ_WEAPON" type="1" x="464" y="176" width="16" height="16">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="20" name="fINV_LIST" type="1" x="14.2687" y="223.173" width="322.184" height="145.732">
+   <properties>
+    <property name="CONTROL" type="int" value="2"/>
+    <property name="LIST" type="int" value="101"/>
+   </properties>
+  </object>
+  <object id="27" name="fINV_LOOT" type="1" x="13.8943" y="47.5474" width="323.995" height="128.532">
+   <properties>
+    <property name="CONTROL" type="int" value="2"/>
+    <property name="LIST" type="int" value="100"/>
+   </properties>
+  </object>
+  <object id="28" name="fbINV_LOOT_UP" type="1" x="336.905" y="224.078" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="100"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="30" name="fbINV_LOOT_DOWN" type="1" x="336" y="352" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2089"/>
+    <property name="BUTTON" type="int" value="101"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="31" name="fbINV_LOOT_TO_INVENTORY" type="1" x="319.941" y="192" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2088"/>
+    <property name="BUTTON" type="int" value="103"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="32" name="fbINV_INVENTORY_TO_LOOT" type="1" x="303.035" y="192.453" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2090"/>
+    <property name="BUTTON" type="int" value="102"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="33" name="fbINV_EQ_RING" type="1" x="368" y="64" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="110"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="34" name="fbINV_EQ_HELMET" type="1" x="416" y="64" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="111"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="35" name="fbINV_EQ_NECKLACE" type="1" x="464" y="64" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="112"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="36" name="fbINV_EQ_RIGHT_GLOVE" type="1" x="368" y="128" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="113"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="37" name="fbINV_EQ_BODYARMOR" type="1" x="416" y="128" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="114"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="38" name="fbINV_EQ_LEFT_GLOVE" type="1" x="464" y="128" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="115"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="39" name="fbINV_EQ_SHIELD" type="1" x="368" y="192" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="116"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="40" name="fbINV_EQ_BOOTS" type="1" x="416" y="192" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="117"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="41" name="fbINV_EQ_WEAPON" type="1" x="463.095" y="191.547" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="118"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+  <object id="42" name="fDETAIL" type="1" x="352" y="224" width="144" height="96">
+   <properties>
+    <property name="CONTROL" type="int" value="3"/>
+   </properties>
+  </object>
+  <object id="43" name="fbEXIT" type="1" x="480" y="0" width="16" height="16">
+   <properties>
+    <property name="ACTIVATED_TILE" type="int" value="2087"/>
+    <property name="BUTTON" type="int" value="255"/>
+    <property name="CONTROL" type="int" value="1"/>
+   </properties>
+  </object>
+ </objectgroup>
+</map>

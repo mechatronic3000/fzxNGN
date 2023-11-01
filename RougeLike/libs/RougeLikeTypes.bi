@@ -50,6 +50,7 @@ $IF TYPEDEFS = UNDEFINED THEN
     id AS LONG
     sprite AS LONG
     nameString AS STRING * 64
+    flavorText AS STRING * 512
     itemType AS LONG ' i.e. 1 = sword, 2 = helmet, 3 = ...
     weight AS SINGLE
     level AS LONG
@@ -61,16 +62,20 @@ $IF TYPEDEFS = UNDEFINED THEN
     sAttributeQty AS STRING * 64 ' the amount of the effect
   END TYPE
 
-  TYPE tCONTAINER ' almost all thins will be a containers
+  TYPE tCONTAINER ' almost all things will have a container
     sprite AS LONG ' the container may have its own sprite such as a bag or corpse
     containerType AS LONG
     owner AS LONG ' which entity owns the container
+    ItemFilter AS LONG
+    lItemCountMax AS LONG ' maximum capacity
     lItemCount AS LONG ' keep track of the last item in the list
     lItemId AS STRING * 2048
     lItemHash AS STRING * 2048
     lItemType AS STRING * 2048 ' these will use long types (512 unique items)
     lItemQty AS STRING * 2048 ' how many? must not exceed stack count
-    lItemAttribute AS STRING * 2048 ' bitmask for item attributes (i.e. is it equipt?)
+    lItemAttribute AS STRING * 2048 ' bitmask for item attributes (i.e. is it equipt?, is it selected?)
+    lItemStatMods AS STRING * 2048 ' special stats modifications
+    lItemEnchantments AS STRING * 2048 ' enchantments
   END TYPE
 
   TYPE tENTITYSTATS
@@ -155,19 +160,31 @@ $IF TYPEDEFS = UNDEFINED THEN
     lootMapImage AS LONG
   END TYPE
 
+  TYPE tGUI_LISTBOX
+    id AS LONG
+    img AS LONG ' list box will be an image
+    sensorImg AS LONG ' used for mouse selection
+    topLine AS LONG 'first line to be displayed
+    selectedLine AS LONG
+  END TYPE
+
   TYPE tGUI_FIELDS
     Id AS STRING * 32
     menuType AS INTEGER ' used to designate which menu they are in
+    control AS _BYTE
     position AS tFZX_VECTOR2d
     size AS tFZX_VECTOR2d
     text AS STRING * 256
     scale AS LONG
     fieldType AS LONG
     activatedTile AS LONG
+    listBox AS tGUI_LISTBOX
     buttonName AS STRING * 128
     buttonType AS LONG
     buttonId AS LONG
     buttonState AS INTEGER ' 0 - off, 1 - hover, 2 - clicked, 3 -doubleclicked
+    subSelectHighlight AS LONG ' item in field the mouse is hovering above
+    subSelect AS LONG
   END TYPE
 
   TYPE tENGINE
@@ -201,6 +218,8 @@ $IF TYPEDEFS = UNDEFINED THEN
     guiRefresh AS _BYTE ' Set to refresh gui
     ' Refactoring rendering pipeline goes below here
     renderPipeline AS _MEM ' array of images
+    debug AS _BYTE
+
   END TYPE
 
   TYPE tFPS

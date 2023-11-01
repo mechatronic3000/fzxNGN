@@ -109,6 +109,37 @@ $IF FZXXMLINCLUDE = UNDEFINED THEN
       getXMLArgString$ = RTRIM$(LTRIM$(m))
     END IF
   END FUNCTION
+  FUNCTION getXMLArgSubValue# (i AS STRING, s AS STRING)
+    DIM AS LONG sp, space
+    DIM AS STRING m
+    sp = INSTR(i, s)
+    IF sp THEN
+      sp = sp + LEN(s)
+      ' spaces separate the arguments
+      space = INSTR(sp, i, CHR$(32)) - sp
+      ' no more space means end of the line
+      IF space <= 0 THEN space = sp
+      m = MID$(i, sp, space)
+      getXMLArgSubValue = VAL(m)
+    END IF
+  END FUNCTION
+
+  ' the substring cannot have spaces in it
+  FUNCTION getXMLArgSubString$ (i AS STRING, s AS STRING)
+    DIM AS LONG sp, space
+    DIM AS STRING m
+    sp = INSTR(i, s)
+    IF sp THEN
+      sp = sp + LEN(s)
+      ' spaces separate the arguments
+      space = INSTR(sp, i, CHR$(32)) - sp
+      ' no more space means end of the line
+      IF space <= 0 THEN space = sp
+      m = MID$(i, sp, space)
+      getXMLArgSubString$ = _TRIM$(m)
+    END IF
+END FUNCTION
+
 
   '**********************************************************************************************
   '   Stack Functions/Subs

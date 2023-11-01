@@ -1,0 +1,245 @@
+'$include:'..\..\fzxNGN_BASE_v2\fzxNGN_ini.bas'
+'$include:'..\libs\globals.bi'
+'$include:'..\libs\strArrays.bm'
+'$include:'..\..\fzxNGN_BASE_v2\fzxNGN_XML.bas'
+$IF CONTAINERS = UNDEFINED THEN
+  $LET CONTAINERS = TRUE
+  SUB printContainer (archtype() AS tARCHTYPE, c AS tCONTAINER)
+    DIM AS LONG idx, arx
+    PRINT "Count:"; c.lItemCount
+    FOR idx = 1 TO c.lItemCount
+      arx = idToArchtype(archtype(), readArrayLong(c.lItemId, idx))
+      PRINT idx; "> "; _TRIM$(archtype(arx).nameString);
+      PRINT "  Type:"; readArrayLong(c.lItemType, idx);
+      PRINT "  Qty:"; readArrayLong(c.lItemQty, idx);
+      PRINT "  Hsh"; readArrayLong(c.lItemHash, idx);
+      PRINT "  stCnt:"; archtype(arx).stackCount
+    NEXT
+
+  END SUB
+
+  SUB printArch (archtype() AS tARCHTYPE)
+    DIM AS LONG idx
+    FOR idx = 0 TO UBOUND(archtype) - 1
+      PRINT idx; ")  "; _TRIM$(archtype(idx).nameString); "  "; archtype(idx).id
+    NEXT
+  END SUB
+
+  SUB initContainer (c AS tCONTAINER, countMax AS LONG, filter AS LONG)
+    c.lItemCountMax = countMax
+    c.ItemFilter = filter
+  END SUB
+
+  FUNCTION isInContainerType (c AS tCONTAINER, t AS LONG)
+    DIM AS LONG idx
+    FOR idx = 1 TO c.lItemCount
+      IF readArrayLong(c.lItemType, idx) = t THEN
+        isInContainerType = TRUE
+      END IF
+    NEXT
+    isInContainerType = FALSE
+  END FUNCTION
+
+  FUNCTION isInContainerId (c AS tCONTAINER, id AS LONG)
+    DIM AS LONG idx
+    FOR idx = 1 TO c.lItemCount
+      IF readArrayLong(c.lItemId, idx) = id THEN
+        isInContainerId = TRUE
+      END IF
+    NEXT
+    isInContainerId = FALSE
+  END FUNCTION
+
+  FUNCTION isInContainerHash (c AS tCONTAINER, hash AS LONG)
+    DIM AS LONG idx
+    FOR idx = 1 TO c.lItemCount
+      IF readArrayLong(c.lItemHash, idx) = hash THEN
+        isInContainerHash = TRUE
+      END IF
+    NEXT
+    isInContainerHash = FALSE
+  END FUNCTION
+
+  SUB archTypeInitialize (arch() AS tARCHTYPE, con() AS tFZX_STRINGTUPLE)
+    DIM AS LONG index
+    DIM AS STRING contextName, argument
+    FOR index = 0 TO UBOUND(con) - 1
+      contextName = _TRIM$(con(index).contextName)
+      argument = _TRIM$(con(index).arg)
+      IF LEN(argument) > 0 THEN
+        SELECT CASE contextName
+          CASE "items item"
+        addArchtypeEx arch(), _
+        getXMLArgString(argument, " name="), _
+        getXMLArgValue(argument,  " id="), _
+        getXMLArgValue(argument,  " category="), _
+        getXMLArgValue(argument,  " sprite="), _
+        getXMLArgValue(argument,  " weight="), _
+        getXMLArgValue(argument,  " level="), _
+        getXMLArgString(argument, " flavorText="), _
+        getXMLArgValue(argument,  " stackCount=")
+        END SELECT
+      END IF
+    NEXT
+  END SUB
+
+  ' Items are general and not specific to whats in the container i.e. short sword
+  SUB addArchtypeEx (arch() AS tARCHTYPE, n AS STRING, id AS LONG, itemType AS LONG, sp AS LONG, weight AS SINGLE, level AS LONG, flavortext AS STRING, stackCount AS LONG)
+    DIM i AS tARCHTYPE
+    i.nameString = n
+    i.id = id
+    i.itemType = itemType
+    i.sprite = sp
+    i.weight = weight
+    i.level = level
+    i.flavorText = flavortext
+    i.stackCount = stackCount
+    addArchtype arch(), i
+  END SUB
+
+  SUB addArchtype (archtype() AS tARCHTYPE, itemI AS tARCHTYPE)
+    archtype(UBOUND(archtype)) = itemI
+    REDIM _PRESERVE archtype(UBOUND(archtype) + 1) AS tARCHTYPE
+  END SUB
+
+  FUNCTION createItemInContainer (arch() AS tARCHTYPE, container AS tCONTAINER, archindx AS LONG)
+    DIM AS LONG indx, id, qty
+    ' some inventories may not allow certain items
+    IF container.ItemFilter = -1 OR arch(archindx).itemType = container.ItemFilter THEN
+      ' See if archtype is already in container
+      FOR indx = 1 TO container.lItemCount
+        id = readArrayLong(container.lItemId, indx)
+        IF id = arch(archindx).id THEN ' id is specific to the item
+          qty = readArrayLong(container.lItemQty, indx)
+          ' make sure it does not exceed stack counts
+          IF qty < arch(archindx).stackCount THEN
+            qty = qty + 1
+            setArrayLong container.lItemQty, indx, qty
+            createItemInContainer = 1
+            EXIT FUNCTION
+          ELSE
+            EXIT FOR
+          END IF
+        END IF
+      NEXT
+
+      ' Presumably this the first of this item in the container
+      IF arch(archindx).id <> 0 THEN ' does the item exist?
+        IF container.lItemCount < container.lItemCountMax AND container.lItemCount < containerMaxSize(container) THEN
+          container.lItemCount = container.lItemCount + 1
+          setArrayLong container.lItemId, container.lItemCount, arch(archindx).id
+          setArrayLong container.lItemType, container.lItemCount, arch(archindx).itemType
+          setArrayLong container.lItemQty, container.lItemCount, 1
+          setArrayLong container.lItemHash, container.lItemCount, uniqueNumber
+          setArrayLong container.lItemAttribute, container.lItemCount, 0
+          createItemInContainer = 2
+        ELSE
+          createItemInContainer = -2
+        END IF
+      ELSE
+        createItemInContainer = -4
+      END IF
+    ELSE
+      createItemInContainer = -1
+    END IF
+  END FUNCTION
+
+  SUB removeItemFromContainer (container AS tCONTAINER, itemIndx AS LONG)
+    DIM AS LONG indx2, qty
+    IF readArrayLong(container.lItemId, itemIndx) > 0 THEN ' is there anything there?
+      qty = readArrayLong(container.lItemQty, itemIndx)
+      qty = qty - 1
+      IF qty > 0 THEN
+        setArrayLong container.lItemQty, itemIndx, qty
+        EXIT SUB
+      ELSE ' used the last of the item
+        FOR indx2 = itemIndx TO container.lItemCount
+          setArrayLong container.lItemId, indx2, readArrayLong(container.lItemId, indx2 + 1)
+          setArrayLong container.lItemHash, indx2, readArrayLong(container.lItemHash, indx2 + 1)
+          setArrayLong container.lItemType, indx2, readArrayLong(container.lItemType, indx2 + 1)
+          setArrayLong container.lItemQty, indx2, readArrayLong(container.lItemQty, indx2 + 1)
+          setArrayLong container.lItemAttribute, indx2, readArrayLong(container.lItemAttribute, indx2 + 1)
+        NEXT
+        container.lItemCount = container.lItemCount - 1
+      END IF
+    END IF
+  END SUB
+
+  FUNCTION containerMaxSize (c AS tCONTAINER)
+    containerMaxSize = LEN(c.lItemId) / 4
+  END FUNCTION
+
+  FUNCTION idToArchtype (arch() AS tARCHTYPE, id AS LONG)
+    DIM AS LONG indx
+    idToArchtype = -1
+    FOR indx = 0 TO UBOUND(arch)
+      IF id = arch(indx).id THEN
+        idToArchtype = indx
+        EXIT FOR
+      END IF
+    NEXT
+  END FUNCTION
+
+  FUNCTION xferItemfromCont2Cont (arch() AS tARCHTYPE, sourceCont AS tCONTAINER, contIndx AS LONG, destCont AS tCONTAINER)
+    DIM AS LONG indx, sId, dQty, sType, sHash, sAttrib, dId, sArch
+
+    sId = readArrayLong(sourceCont.lItemId, contIndx)
+    IF sId > 0 THEN ' is it actually an item?
+      sType = readArrayLong(sourceCont.lItemType, contIndx)
+      sHash = readArrayLong(sourceCont.lItemHash, contIndx)
+      sAttrib = readArrayLong(sourceCont.lItemAttribute, contIndx)
+      ' verify that the container is the right type of container
+      IF destCont.ItemFilter = -1 OR sType = destCont.ItemFilter THEN
+        ' See if item is already in container
+        FOR indx = 1 TO destCont.lItemCount
+          dId = readArrayLong(destCont.lItemId, indx)
+          IF sId = dId THEN ' id is specific to the item
+            dQty = readArrayLong(destCont.lItemQty, indx)
+            ' make sure it does not exceed stack counts
+            sArch = idToArchtype(arch(), sId)
+            IF sArch > -1 THEN 'does it exist in the archtype list
+              IF dQty < arch(sArch).stackCount THEN
+                dQty = dQty + 1
+                setArrayLong destCont.lItemQty, indx, dQty
+                removeItemFromContainer sourceCont, contIndx
+                xferItemfromCont2Cont = 1 ' successful transfer
+                EXIT FUNCTION
+              ELSE
+                ' stack is too high, need to add a slot
+                EXIT FOR
+              END IF
+            ELSE
+              xferItemfromCont2Cont = -2 ' failed for trying to transfer an non existing item
+            END IF
+          END IF
+        NEXT
+        'if we have to add another slot make sure we have room
+        IF destCont.lItemCount < destCont.lItemCountMax AND destCont.lItemCount < containerMaxSize(destCont) THEN
+          ' Presumably this the first of this item, or new stack in the container
+          destCont.lItemCount = destCont.lItemCount + 1
+          setArrayLong destCont.lItemId, destCont.lItemCount, sId
+          setArrayLong destCont.lItemType, destCont.lItemCount, sType
+          setArrayLong destCont.lItemQty, destCont.lItemCount, 1
+          setArrayLong destCont.lItemHash, destCont.lItemCount, sHash
+          setArrayLong destCont.lItemAttribute, destCont.lItemCount, 0 ' remove any attribute
+          removeItemFromContainer sourceCont, contIndx
+          xferItemfromCont2Cont = 2 ' success space was added
+        ELSE
+          xferItemfromCont2Cont = -1 ' failed for no space
+        END IF
+      ELSE
+        xferItemfromCont2Cont = -4 ' failed for wrong type
+      END IF
+    ELSE
+      xferItemfromCont2Cont = -3 ' failed, tried to transfer nothing
+    END IF
+  END FUNCTION
+
+  FUNCTION uniqueNumber& ()
+    DIM AS DOUBLE t, r
+    t = TIMER(.001) * 1000
+    r = RND * 100000000
+    uniqueNumber = INT(t + r)
+  END FUNCTION
+
+$END IF

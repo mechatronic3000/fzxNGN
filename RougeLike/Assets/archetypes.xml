@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <items>
+  <item name="nothing"            id="-1" category="-1"  sprite="0"    weight="0" flavortext="Nothing"            level="0" stackCount="99999"/>
   <item name="GOLD"               id="1" category="9999" sprite="233"  weight="0" flavortext="Yay Money"          level="0" stackCount="99999"/>
   <item name="dagger"             id="2" category="1"    sprite="320"  weight="0" flavortext="Dagger"             level="0" stackCount="1"/>
   <item name="short broad sword"  id="3" category="1"    sprite="321"  weight="0" flavortext="Short Broad Sword"  level="0" stackCount="1"/>

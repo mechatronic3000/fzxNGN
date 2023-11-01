@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.8" tiledversion="1.8.1" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="10" nextobjectid="111">
+<map version="1.8" tiledversion="1.8.1" orientation="orthogonal" renderorder="right-down" width="128" height="128" tilewidth="16" tileheight="16" infinite="0" nextlayerid="10" nextobjectid="114">
  <properties>
   <property name="CAMERA_AABB_SIZE_X" type="float" value="4000"/>
   <property name="CAMERA_AABB_SIZE_Y" type="float" value="4000"/>
@@ -156,7 +156,7 @@
    <property name="MUSIC_2" type="file" value="Music/Bog-Creatures-On-the-Move_Looping.mp3"/>
   </properties>
  </group>
- <objectgroup id="2" name="Objects" visible="0">
+ <objectgroup id="2" name="Objects">
   <object id="1" name="PLAYER" type="PLAYER" x="501.333" y="622.5">
    <properties>
     <property name="BEHAVIOR" type="int" value="0"/>
@@ -493,6 +493,38 @@
     <property name="NO_PHYSICS" type="int" value="1"/>
     <property name="SCALE" type="float" value="1"/>
     <property name="TileID" type="int" value="175"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="112" name="enCHEST_01" type="ENTITY" x="537" y="635.667">
+   <properties>
+    <property name="BEHAVIOR" type="int" value="2"/>
+    <property name="CONTAINER_ADD" value="archtype=2 qty=1"/>
+    <property name="CONTAINER_ADD_0" value="archtype=1 qty=100"/>
+    <property name="MAX_FORCE_X" type="float" value="5000"/>
+    <property name="MAX_FORCE_Y" type="float" value="500000"/>
+    <property name="MOVEMENT_DRUNKINESS" type="int" value="1"/>
+    <property name="MOVEMENT_SPEED" type="float" value="0.9"/>
+    <property name="NO_PHYSICS" type="int" value="1"/>
+    <property name="SCALE" type="float" value="1"/>
+    <property name="TileID" type="int" value="298"/>
+    <property name="TileID_ACTIVATED" type="int" value="299"/>
+   </properties>
+   <point/>
+  </object>
+  <object id="113" name="enCHEST_02" type="ENTITY" x="433.667" y="636.667">
+   <properties>
+    <property name="BEHAVIOR" type="int" value="2"/>
+    <property name="CONTAINER_ADD" value="archtype=2 qty=1"/>
+    <property name="CONTAINER_ADD_0" value="archtype=1 qty=100"/>
+    <property name="MAX_FORCE_X" type="float" value="5000"/>
+    <property name="MAX_FORCE_Y" type="float" value="500000"/>
+    <property name="MOVEMENT_DRUNKINESS" type="int" value="1"/>
+    <property name="MOVEMENT_SPEED" type="float" value="0.9"/>
+    <property name="NO_PHYSICS" type="int" value="1"/>
+    <property name="SCALE" type="float" value="1"/>
+    <property name="TileID" type="int" value="298"/>
+    <property name="TileID_ACTIVATED" type="int" value="299"/>
    </properties>
    <point/>
   </object>

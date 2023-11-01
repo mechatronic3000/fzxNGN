@@ -101,6 +101,7 @@ main
 '$include:'libs\strArrays.bm'
 '$include:'libs\debug.bm'
 '$include:'libs\rpgFunctions.bm'
+'$include:'libs\containers.bm'
 
 '**********************************************************************************************
 '   Main Loop
@@ -117,10 +118,6 @@ SUB main
   STATIC tileMap AS tTILEMAP
   STATIC tile(0) AS tTILE
 
-
-  STATIC archtype(0) AS tARCHTYPE
-  STATIC container(0) AS tCONTAINER
-
   _TITLE "Panacea"
 
   __gmEngine.workingDirectory = _CWD$ + OSPathJoin$
@@ -136,22 +133,18 @@ SUB main
   __gmEngine.gui.hudMapFile = "hud.tmx"
   __gmEngine.gui.hudLrgConMapFile = "hudLrgCon.tmx"
   __gmEngine.gui.inventoryMapFile = "Inventory.tmx"
-  __gmEngine.gui.lootMapFile = "Loot.tmx"
+  __gmEngine.gui.lootMapFile = "Loot2.tmx"
   __gmEngine.itemListFilename = "archetypes.xml"
 
   initScreen 1024, 768, 32
   fzxInitFPS
-  buildScene archtype(),_
-             container(),_
-             tile(), _
+  buildScene tile(), _
              tileMap, _
              message()
 
 
   DO
-    runScene archtype(),_
-             container(),_
-             tile(), _
+    runScene tile(), _
              tileMap, _
              message()
     handleTimers
@@ -173,7 +166,7 @@ END SUB
 '**********************************************************************************************
 SUB _______________BUILD_SCENE (): END SUB
 
-SUB buildScene (arch() AS tARCHTYPE, container() AS tCONTAINER, tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSAGE)
+SUB buildScene (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSAGE)
 
   _MOUSEHIDE
   __gmOptions.musicVolume = .05
@@ -190,6 +183,12 @@ SUB buildScene (arch() AS tARCHTYPE, container() AS tCONTAINER, tile() AS tTILE,
   __gmEngine.displayClearColor = _RGB32(26, 26, 26) '_RGB32(39, 67, 55)
 
   '********************************************************
+  '   Load Items
+  '********************************************************
+  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.itemListFilename), context()
+  archTypeInitialize __gmItemArchtype(), context()
+
+  '********************************************************
   '   Load Map
   '********************************************************
   XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.currentMap), context()
@@ -197,27 +196,22 @@ SUB buildScene (arch() AS tARCHTYPE, container() AS tCONTAINER, tile() AS tTILE,
 
   '********************************************************
   '   Load GUI
-  '********************************************************
-  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.inventoryMapFile), context()
-  XMLGUI __gmEngine.gui.inventoryMapFile, __gmGuiLayout(cGUI_LAYOUT_INVENTORY), context(), 1
+  ''********************************************************
+  'XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.inventoryMapFile), context()
+  'XMLGUI __gmEngine.gui.inventoryMapFile, __gmGuiLayout(cGUI_LAYOUT_INVENTORY), context(), 1
 
-  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.lootMapFile), context()
-  XMLGUI __gmEngine.gui.lootMapFile, __gmGuiLayout(cGUI_LAYOUT_LOOT), context(), 0
+  'XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.lootMapFile), context()
+  'XMLGUI __gmEngine.gui.lootMapFile, __gmGuiLayout(cGUI_LAYOUT_LOOT), context(), 0
 
-  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudMapFile), context()
-  XMLGUI __gmEngine.gui.hudMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD), context(), 0
+  'XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudMapFile), context()
+  'XMLGUI __gmEngine.gui.hudMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD), context(), 0
 
-  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudLrgConMapFile), context()
-  XMLGUI __gmEngine.gui.hudLrgConMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), context(), 0
-
+  'XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudLrgConMapFile), context()
+  'XMLGUI __gmEngine.gui.hudLrgConMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), context(), 0
+  loadGui
   __gmEngine.gui.hud = cGUI_LAYOUT_HUD
   __gmConsole.img = _NEWIMAGE(1024, 1024, 32)
 
-  '********************************************************
-  '   Load Items
-  '********************************************************
-  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.itemListFilename), context()
-  archTypeInitialize arch(), context()
 
   initInputDevice tile(idToTile(tile(), 516 + 1)).t
 
@@ -229,16 +223,14 @@ SUB buildScene (arch() AS tARCHTYPE, container() AS tCONTAINER, tile() AS tTILE,
   END IF
 
   fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_SPLASH
-  __debugDumpBodies
+  ' __debugDumpBodies
 END SUB
 
 '**********************************************************************************************
 '   Scene Handling
 '**********************************************************************************************
 SUB _______________RUN_SCENE (): END SUB
-SUB runScene (arch() as tarchtype,_
-              container as tcontainer,_
-              tile() AS tTILE, _
+SUB runScene (tile() AS tTILE, _
               tilemap AS tTILEMAP, _
               message() AS tMESSAGE)
 
@@ -247,14 +239,13 @@ SUB runScene (arch() as tarchtype,_
   DIM AS LONG backgroundMusic, music1, music2, music3
   DIM AS tFZX_VECTOR2d tempVec, tempVec2
   DIM AS tFZX_VECTOR2d position
-  DIM AS LONG bkgndID, hudId, xs, ys
+  DIM AS LONG hudId, xs, ys
 
   DIM AS LONG indx, playerID, mouseID, targetID
-  STATIC lastZoom AS SINGLE
   STATIC AS tFZX_VECTOR2d vecs(256) ' list of vectors for the overlay
   STATIC AS LONG vecCount
 
-  STATIC m AS tMESSAGE
+  'STATIC m AS tMESSAGE
 
   backgroundMusic = soundManagerIDClass(__gmSounds(), "BACKGROUND")
   music1 = soundManagerIDClass(__gmSounds(), "MUSIC_1")
@@ -465,29 +456,29 @@ END SUB
 
 
 SUB handleGUI (tilemap AS tTILEMAP)
-  DIM AS LONG playerId, targetID, guiBtnId, indx
+  DIM AS LONG playerId, targetID, guiBtnId, indx, guiLstId, selBit, guiLstLn, iter, sel, ret
+  ' DIM AS tCONTAINER cs, cd
   playerId = entityManagerID("PLAYER")
   targetID = __gmEntity(playerId).parameters.target
 
-  guiBtnId = isOnGUISensor(__fzxInputDevice.mouse.position)
-
-  IF guiBtnId > 0 THEN
+  guiBtnId = isOnGUISensorB(__fzxInputDevice.mouse.position)
+  guiLstId = isOnGUISensorG(__fzxInputDevice.mouse.position)
+  guiLstLn = isOnGUISensorR(__fzxInputDevice.mouse.position)
+  IF guiBtnId > 0 OR guiLstId > 0 THEN
     'clearScreen engine
     FOR indx = 0 TO UBOUND(__gmGuiFields)
       __gmGuiFields(indx).buttonState = cFZX_MOUSE_NONE
       IF guiBtnId = __gmGuiFields(indx).buttonId THEN
-        IF __fzxInputDevice.mouse.b1.doubleClick THEN
-          __gmGuiFields(indx).buttonState = cFZX_MOUSE_DOUBLECLICK ' Double Clicked -- This probably wont work unless button state 2 is ignored
-        ELSE IF __fzxInputDevice.mouse.b1.button THEN
-            __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK ' Button Clicked
-          ELSE
-            __gmGuiFields(indx).buttonState = cFZX_MOUSE_HOVER ' Hover over Button
-          END IF
+        IF __fzxInputDevice.mouse.b1.button THEN
+          __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK ' Button Clicked
+        ELSE
+          __gmGuiFields(indx).buttonState = cFZX_MOUSE_HOVER ' Hover over Button
         END IF
       END IF
 
 
-      SELECT CASE __gmGuiFields(indx).menuType
+      '__gmEngine.gameMode.currentState   cFSM_GAMEMODE_LOOTMENU
+      SELECT CASE __gmGuiFields(indx).menuType ' Which menu or screen are you in?
         CASE cGUI_LAYOUT_HUD
           IF guiBtnId = 1 AND __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
             moveEntity __gmEntity(playerId), __fzxInputDevice.mouse.worldPosition, tilemap
@@ -529,12 +520,70 @@ SUB handleGUI (tilemap AS tTILEMAP)
           END IF
 
         CASE cGUI_LAYOUT_LOOT
-          IF __gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
+          IF __gmGuiFields(indx).control = 2 THEN
+            SELECT CASE _TRIM$(__gmGuiFields(indx).Id)
+              CASE "fINV_LOOT"
+                IF guiLstLn > 0 THEN ' which item in the list?
+                  IF guiLstId = 100 THEN ' Loot list
+                    IF __fzxInputDevice.mouse.b1.PosEdge THEN
+                      __debugPrint "iteminlist :" + STR$(guiLstLn)
+
+                      __debugPrint "playerID :" + STR$(playerId)
+                      __debugPrint "playertarget :" + STR$(__gmEntity(playerId).parameters.target)
+                      selBit = readArrayLong(__gmEntity(__gmEntity(playerId).parameters.target).inventory.lItemAttribute, guiLstLn) ' AND cCONT_ITEM_SELECT
+                      __debugPrint "selbit B :" + STR$(selBit)
+                      IF selBit AND cCONT_ITEM_SELECT THEN
+                        setArrayLong __gmEntity(__gmEntity(playerId).parameters.target).inventory.lItemAttribute, guiLstLn, selBit AND NOT cCONT_ITEM_SELECT
+                      ELSE
+                        setArrayLong __gmEntity(__gmEntity(playerId).parameters.target).inventory.lItemAttribute, guiLstLn, selBit OR cCONT_ITEM_SELECT
+                      END IF
+                      __debugPrint "selbit a :" + STR$(readArrayLong(__gmEntity(__gmEntity(playerId).parameters.target).inventory.lItemAttribute, guiLstLn))
+                      __gmEngine.guiRefresh = TRUE
+                      updateGUI __gmEngine.gui.hud, tilemap
+                    END IF
+                  END IF
+                END IF
+              CASE "fINV_LIST"
+                IF guiLstLn > 0 THEN ' which item in the list?
+                  IF guiLstId = 101 THEN ' inventory list
+                    IF __fzxInputDevice.mouse.b1.PosEdge THEN
+                      selBit = readArrayLong(__gmEntity(playerId).inventory.lItemAttribute, guiLstLn) ' AND cCONT_ITEM_SELECT
+                      IF selBit AND cCONT_ITEM_SELECT THEN
+                        setArrayLong __gmEntity(playerId).inventory.lItemAttribute, guiLstLn, selBit AND NOT cCONT_ITEM_SELECT
+                      ELSE
+                        setArrayLong __gmEntity(playerId).inventory.lItemAttribute, guiLstLn, selBit OR cCONT_ITEM_SELECT
+                      END IF
+                      __gmEngine.guiRefresh = TRUE
+                      updateGUI __gmEngine.gui.hud, tilemap
+                    END IF
+                  END IF
+                END IF
+            END SELECT
+          END IF
+          IF __fzxInputDevice.mouse.b1.PosEdge THEN '__gmGuiFields(indx).buttonState = cFZX_MOUSE_CLICK THEN
             SELECT CASE guiBtnId
               CASE 100 ' loot scroll up
               CASE 101 ' loot scroll down
               CASE 102 ' move inventory to loot
+                FOR iter = 1 TO __gmEntity(playerId).inventory.lItemCount
+                  sel = readArrayLong(__gmEntity(playerId).inventory.lItemAttribute, iter) AND cCONT_ITEM_SELECT ' is item selected?
+                  IF sel THEN
+                    ret = xferItemfromCont2Cont(__gmItemArchtype(), __gmEntity(playerId).inventory, iter, __gmEntity(__gmEntity(playerId).parameters.target).inventory)
+                  END IF
+                NEXT
+                __gmEngine.guiRefresh = TRUE
+                updateGUI __gmEngine.gui.hud, tilemap
+
               CASE 103 ' move loot to inventory
+                FOR iter = 1 TO __gmEntity(__gmEntity(playerId).parameters.target).inventory.lItemCount
+                  sel = readArrayLong(__gmEntity(__gmEntity(playerId).parameters.target).inventory.lItemAttribute, iter) AND cCONT_ITEM_SELECT ' is item selected?
+                  IF sel THEN
+                    ret = xferItemfromCont2Cont(__gmItemArchtype(), __gmEntity(__gmEntity(playerId).parameters.target).inventory, iter, __gmEntity(playerId).inventory)
+                  END IF
+                NEXT
+                __gmEngine.guiRefresh = TRUE
+                updateGUI __gmEngine.gui.hud, tilemap
+
               CASE 110 ' equip ring
               CASE 111 ' equip helm
               CASE 112 ' equip necklace
@@ -548,11 +597,13 @@ SUB handleGUI (tilemap AS tTILEMAP)
               CASE 255 ' exit
                 clearScreen
                 __gmEngine.guiRefresh = TRUE
+
                 updateGUI cGUI_LAYOUT_HUD, tilemap
                 fzxFSMChangeState __gmEngine.gameMode, cFSM_GAMEMODE_GAMEPLAY
                 __gmEntity(targetID).parameters.activated = 0
             END SELECT
           END IF
+
       END SELECT
     NEXT
   END IF
@@ -562,7 +613,7 @@ SUB handlePlayerInput (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSA
 
 
   DIM AS LONG playerId, mouseId
-  DIM AS tFZX_VECTOR2d tempVec, mpos, position
+  DIM AS tFZX_VECTOR2d tempVec, mpos
   playerId = entityManagerID("PLAYER")
   IF playerId < 0 THEN
     PRINT "Object does not exist!": waitkey: END
@@ -616,10 +667,10 @@ SUB handlePlayerInput (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSA
   END IF
 
   IF __fzxInputDevice.mouse.b1.PosEdge THEN
-    'isOnSensor returns the body ID of the sensor that the mouse is touching (as long it is under 256)
+    'isOnSensorB returns the body ID of the sensor that the mouse is touching (as long it is under 256)
     DIM AS LONG volumeControlID
     volumeControlID = entityManagerID("enVOLCONTROL")
-    SELECT CASE isOnSensor(mpos)
+    SELECT CASE isOnSensorB(mpos)
       CASE fzxBodyManagerID("senVolumeUp"):
         IF __gmOptions.musicVolume <= 1.0 THEN
           __gmOptions.musicVolume = __gmOptions.musicVolume + 0.1
@@ -661,7 +712,7 @@ SUB handleMapSpecific (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tMESSA
   END IF
   mpos = __fzxInputDevice.mouse.position
   SELECT CASE _TRIM$(__gmEngine.currentMap)
-    CASE "Main_Menu.tmx"
+    CASE "Mona.tmx"
       IF NOT fzxIsBodyTouchingBody(__gmEntity(playerId).objectID, fzxBodyManagerID("senMUSIC_1")) THEN
         playMusic __gmPlayList, __gmSounds(), "MUSIC_1"
       END IF
@@ -727,12 +778,15 @@ FUNCTION handleMapChange (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tME
   DIM AS LONG door, playerId, playerBodyId
   DIM AS tDOOR tempDoor
   DIM AS tFZX_VECTOR2d tempVec
+  DIM AS tENTITY pl
   handleMapChange = 0
   door = handleDoors
   IF NOT door THEN
     'PRINT #__logfile, "Current Map: "; _TRIM$(__gmEngine.currentMap)
     'PRINT #__logfile, "Door name:"; __gmPortals(door).doorName
     ' __gmPortals(UBOUND(__gmPortals) - 1).map
+    playerId = entityManagerID("PLAYER")
+    pl = __gmEntity(playerId)
     stopMusic __gmPlayList
     tempDoor = __gmPortals(door): 'make a copy of the activated Door
     REDIM context(0) AS tFZX_STRINGTUPLE
@@ -743,13 +797,13 @@ FUNCTION handleMapChange (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tME
     XMLparse _CWD$ + OSPathJoin$ + "Assets" + OSPathJoin$ + _TRIM$(__gmEngine.currentMap), context()
     XMLapplyAttributes tile(), tilemap, context()
     ' Mouse pointer = 516
-    REDIM context(0) AS tFZX_STRINGTUPLE
-    XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.inventoryMapFile), context()
-    XMLGUI __gmEngine.gui.inventoryMapFile, __gmGuiLayout(cGUI_LAYOUT_INVENTORY), context(), 1
-    REDIM context(0) AS tFZX_STRINGTUPLE
-    XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.lootMapFile), context()
-    XMLGUI __gmEngine.gui.lootMapFile, __gmGuiLayout(cGUI_LAYOUT_LOOT), context(), 0
-
+    'REDIM context(0) AS tFZX_STRINGTUPLE
+    'XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.inventoryMapFile), context()
+    'XMLGUI __gmEngine.gui.inventoryMapFile, __gmGuiLayout(cGUI_LAYOUT_INVENTORY), context(), 1
+    'REDIM context(0) AS tFZX_STRINGTUPLE
+    'XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.lootMapFile), context()
+    'XMLGUI __gmEngine.gui.lootMapFile, __gmGuiLayout(cGUI_LAYOUT_LOOT), context(), 0
+    loadGui
     initInputDevice tile(idToTile(tile(), 516 + 1)).t
 
     '        __gmEntity(playerID).objectID = playerBodyID
@@ -765,11 +819,15 @@ FUNCTION handleMapChange (tile() AS tTILE, tilemap AS tTILEMAP, message() AS tME
     fzxSetBody cFZX_PARAMETER_POSITION, __gmEntity(playerId).objectID, tempVec.x, tempVec.y
     moveCamera __fzxBody(__gmEntity(playerId).objectID).fzx.position
     fzxCalculateFOV
+    __gmEntity(playerId).parameters = pl.parameters
+    __gmEntity(playerId).stats = pl.stats
+    __gmEntity(playerId).inventory = pl.inventory
+
     'PRINT #__logfile, "PlayerEntityId: "; playerId; "  playerBodyID: "; playerBodyId
     'PRINT #__logfile, "New Map: "; _TRIM$(__gmEngine.currentMap)
     'PRINT #__logfile, "Landmark: "; __gmLandmark(findLandmarkHash(__gmLandmark(), tempDoor.landmarkHash)).landmarkName
     'PRINT #__logfile, USING " pos: ##### #####"; tempVec.x; tempVec.y
-    __debugDumpBodies
+    ' __debugDumpBodies
     handleMapChange = -1
   END IF
 
@@ -780,7 +838,10 @@ SUB updateGUI (gui AS LONG, tilemap AS tTILEMAP)
   IF __gmEngine.guiRefresh THEN
     __gmEngine.guiRefresh = 0
     DIM m AS tMESSAGE
-    DIM AS LONG indx, playerID
+    'DIM AS STRING ls, sprt, selChar
+    DIM AS LONG indx, playerID ', iter, spr, mScaleLast, sel
+
+    DIM AS tCONTAINER c
     playerID = entityManagerID("PLAYER")
     ' clear the overlay screen
     clearOverlayScr
@@ -838,10 +899,10 @@ SUB updateGUI (gui AS LONG, tilemap AS tTILEMAP)
             END SELECT
           CASE cGUI_LAYOUT_LOOT
             SELECT CASE _TRIM$(__gmGuiFields(indx).Id)
-              CASE "fINV_LIST"
-                renderTextEx __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_LOOT), m, formatString$("~00370 test", 9)
               CASE "fINV_LOOT"
-                renderTextEx __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_LOOT), m, formatString$("~00422 test", 9)
+                drawContainerList tilemap, __gmEntity(__gmEntity(playerID).parameters.target).inventory, indx, m
+              CASE "fINV_LIST"
+                drawContainerList tilemap, __gmEntity(playerID).inventory, indx, m
               CASE "fGOLD"
                 renderText __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_INVENTORY), m, formatNumberString$(__gmEntity(playerID).stats.gold, 6)
             END SELECT
@@ -898,6 +959,65 @@ SUB updateGUI (gui AS LONG, tilemap AS tTILEMAP)
   _DEST 0
 END SUB
 
+SUB loadGui
+  REDIM context(0) AS tFZX_STRINGTUPLE
+  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.inventoryMapFile), context()
+  XMLGUI __gmEngine.gui.inventoryMapFile, __gmGuiLayout(cGUI_LAYOUT_INVENTORY), context(), 1
+  REDIM context(0) AS tFZX_STRINGTUPLE
+  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.lootMapFile), context()
+  XMLGUI __gmEngine.gui.lootMapFile, __gmGuiLayout(cGUI_LAYOUT_LOOT), context(), 0
+  REDIM context(0) AS tFZX_STRINGTUPLE
+  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudMapFile), context()
+  XMLGUI __gmEngine.gui.hudMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD), context(), 0
+  REDIM context(0) AS tFZX_STRINGTUPLE
+  XMLparse _TRIM$(__gmEngine.assetsDirectory) + _TRIM$(__gmEngine.gui.hudLrgConMapFile), context()
+  XMLGUI __gmEngine.gui.hudLrgConMapFile, __gmGuiLayout(cGUI_LAYOUT_HUD_LARGE_CONSOLE), context(), 0
+
+END SUB
+
+
+SUB drawContainerList (tilemap AS tTILEMAP, c AS tCONTAINER, indx AS LONG, m AS tMESSAGE)
+  DIM AS LONG iter, sel, spr, x1, y1, x2, y2
+  DIM AS STRING ls, selchar, sprt
+  IF __gmGuiFields(indx).listBox.img >= -1 THEN 'check to see if list box image has already been created
+    ' create a image the size of the list tall or minimum the size of the field
+    __gmGuiFields(indx).listBox.img = _NEWIMAGE(__gmGuiFields(indx).size.x, fzxScalarMax(tilemap.tileHeight * c.lItemCount, __gmGuiFields(indx).size.y), 32)
+    __gmGuiFields(indx).listBox.topLine = 1
+    __gmGuiFields(indx).listBox.selectedLine = 1
+  END IF
+
+  ''Highlight the whole Field with its ID
+  LINE (__gmGuiFields(indx).position.x * 2, __gmGuiFields(indx).position.y * 2)-(__gmGuiFields(indx).position.x * 2 + __gmGuiFields(indx).size.x * 2, __gmGuiFields(indx).position.y * 2 + __gmGuiFields(indx).size.y * 2), _RGB32(0, __gmGuiFields(indx).listBox.id, 0), BF
+  fzxVector2DSet m.position, 0, 0
+  m.baseImage = __gmGuiFields(indx).listBox.img
+  _DEST m.baseImage
+  CLS , __gmEngine.displayClearColor
+
+  FOR iter = 1 TO c.lItemCount
+    sel = readArrayLong(c.lItemAttribute, iter) AND cCONT_ITEM_SELECT ' is item selected?
+    IF sel THEN
+      selchar = "~01815 "
+    ELSE
+      selchar = "~01767 "
+    END IF
+    ls = ""
+    spr = __gmItemArchtype(idToArchtype(__gmItemArchtype(), readArrayLong(c.lItemId, iter))).sprite
+    sprt = "~" + formatNumberString$(spr, 5) + " "
+    ls = selchar + sprt + formatString$(__gmItemArchtype(idToArchtype(__gmItemArchtype(), readArrayLong(c.lItemId, iter))).nameString, 10) + "  " + formatNumberString$(readArrayLong(c.lItemQty, iter), 5)
+    renderTextEx __gmGuiTile(), __gmGuiLayout(cGUI_LAYOUT_LOOT), m, ls
+    ' Highlight each field with its individual item
+    _DEST __gmEngine.gui.sensorMap
+
+    x1 = __gmGuiFields(indx).position.x * 2
+    y1 = (__gmGuiFields(indx).position.y * 2) + m.position.y
+    x2 = (__gmGuiFields(indx).position.x + __gmGuiFields(indx).size.x) * 2
+    y2 = (__gmGuiFields(indx).position.y * 2 + tilemap.tileHeight + m.position.y)
+    LINE (x1, y1)-(x2, y2), _RGB32(iter, __gmGuiFields(indx).listBox.id, 0), BF
+    m.position.y = m.position.y + tilemap.tileHeight
+  NEXT
+
+END SUB
+
 
 '**********************************************************************************************
 '   Entity Management Subs
@@ -934,6 +1054,7 @@ SUB setDefaultEntityStats (id AS LONG)
   __gmEntity(id).stats.mana = 10
   __gmEntity(id).stats.gold = INT(RND * 20)
   __gmEntity(id).parameters.activated = 0
+  initContainer __gmEntity(id).inventory, 10, -1
 END SUB
 
 FUNCTION entityManagerID (entityName AS STRING)
@@ -968,7 +1089,7 @@ SUB moveEntity (entity AS tENTITY, endPos AS tFZX_VECTOR2d, tilemap AS tTILEMAP)
 END SUB
 
 SUB handleEntitys (tile() AS tTILE, tilemap AS tTILEMAP)
-  DIM AS LONG index, iD, playerID, mouseID, playerTouching, mouseTouching, hitP, hitM, hitPa, hitPb, hitMa, hitMb, mtest
+  DIM AS LONG index, iD, playerID, mouseID, playerTouching, mouseTouching, hitP, hitM, hitPa, hitPb, hitMa, hitMb
   DIM AS _BYTE sameTouch
   DIM AS _FLOAT progress
   DIM AS STRING dir
@@ -1036,7 +1157,6 @@ SUB handleEntitys (tile() AS tTILE, tilemap AS tTILEMAP)
               fzxFSMChangeState __gmEntity(index).fsmPrimary, cFSM_ENTITY_WAIT
             CASE cENTITY_BEHAVIOR_CONTAINER
               IF __gmEngine.gameMode.currentState <> cFSM_GAMEMODE_LOOTMENU_SETUP AND __gmEngine.gameMode.currentState <> cFSM_GAMEMODE_LOOTMENU THEN
-                'need to make sure player and mouse are touching the same thing
                 IF __fzxInputDevice.mouse.b1.PosEdge THEN
                   IF sameTouch THEN
                     IF NOT __gmEntity(index).parameters.activated THEN
@@ -1160,92 +1280,47 @@ SUB findAdjacentTile (tilemap AS tTILEMAP, entityID AS LONG, o AS tFZX_VECTOR2d)
     NEXT
   NEXT
 END SUB
-'**********************************************************************************************
-'   Inventory
-'**********************************************************************************************
-SUB _______________INVENTORY: END SUB
-
-SUB archTypeInitialize (arch() AS tARCHTYPE, con() AS tFZX_STRINGTUPLE)
-  DIM AS LONG index, uB
-  DIM AS STRING contextName, argument
-  FOR index = 0 TO UBOUND(con) - 1
-    contextName = trim$(con(index).contextName)
-    argument = trim$(con(index).arg)
-
-    uB = UBOUND(arch)
-    SELECT CASE contextName
-      CASE "items item"
-        addArchtypeEx arch(), _
-        getXMLArgString(argument, " name="), _
-        getXMLArgValue(argument, " category="), _
-        getXMLArgValue(argument, " id="), _
-        getXMLArgValue(argument, " sprite="), _
-        getXMLArgValue(argument, " weight="), _
-        getXMLArgValue(argument, " level="), _
-        getXMLArgValue(argument, " stackCount=")
-    END SELECT
-  NEXT
-END SUB
-' Items are general and not specific to whats in the inventory i.e. short sword
-SUB addArchtypeEx (arch() AS tARCHTYPE, n AS STRING, id AS LONG, itemType AS LONG, sp AS LONG, weight AS SINGLE, level AS LONG, stackCount AS LONG)
-  DIM i AS tARCHTYPE
-  i.nameString = n
-  i.id = id
-  i.itemType = itemType
-  i.sprite = sp
-  i.weight = weight
-  i.level = level
-  i.stackCount = stackCount
-  addArchtype arch(), i
-END SUB
-
-SUB addArchtype (archtype() AS tARCHTYPE, itemI AS tARCHTYPE)
-  archtype(UBOUND(archtype)) = itemI
-  REDIM _PRESERVE archtype(UBOUND(archtype) + 1) AS tARCHTYPE
-END SUB
-
-FUNCTION addItemToContainer (arch() AS tARCHTYPE, container AS tCONTAINER, itemIndx AS LONG)
-  DIM AS LONG indx, id, cnt, qty
-  ' See if archtype is already in inventory
-  FOR indx = 1 TO container.lItemCount
-    id = readArrayLong(container.lItemId, indx)
-    IF id = arch(itemIndx).id THEN ' id is specific to the item
-      qty = readArrayLong(container.lItemQty, indx)
-      ' make sure it does not exceed stack counts
-      IF qty <= arch(itemIndx).stackCount THEN
-        qty = qty + 1
-        setArrayLong container.lItemQty, indx, qty
-        EXIT FUNCTION
-      END IF
-    END IF
-  NEXT
-  ' Presumably this the first of this item in the inventory
-  setArrayLong container.lItemId, container.lItemCount, arch(itemIndx).id
-  setArrayLong container.lItemType, container.lItemCount, arch(itemIndx).itemType
-  setArrayLong container.lItemQty, container.lItemCount, 1
-  container.lItemCount = container.lItemCount + 1
-
-END FUNCTION
-
 
 
 '**********************************************************************************************
 '   Collision Tools
 '**********************************************************************************************
 SUB _______________COLLISION_QUERY_TOOLS_EX: END SUB
-FUNCTION isOnSensor (p AS tFZX_VECTOR2d)
+FUNCTION isOnSensorB (p AS tFZX_VECTOR2d)
   _SOURCE __gmEngine.hiddenScr
-  isOnSensor = _BLUE(POINT(p.x, p.y))
+  isOnSensorB = _BLUE32(POINT(p.x, p.y))
   _SOURCE __gmEngine.displayScr
 END FUNCTION
 
-FUNCTION isOnGUISensor (p AS tFZX_VECTOR2d)
+FUNCTION isOnGUISensorB (p AS tFZX_VECTOR2d)
   _SOURCE __gmEngine.gui.sensorMap
-  isOnGUISensor = _BLUE(POINT(p.x, p.y))
+  isOnGUISensorB = _BLUE32(POINT(p.x, p.y))
   _SOURCE __gmEngine.displayScr
 END FUNCTION
 
+FUNCTION isOnSensorG (p AS tFZX_VECTOR2d)
+  _SOURCE __gmEngine.hiddenScr
+  isOnSensorG = _GREEN32(POINT(p.x, p.y))
+  _SOURCE __gmEngine.displayScr
+END FUNCTION
 
+FUNCTION isOnGUISensorG (p AS tFZX_VECTOR2d)
+  _SOURCE __gmEngine.gui.sensorMap
+  isOnGUISensorG = _GREEN32(POINT(p.x, p.y))
+  _SOURCE __gmEngine.displayScr
+END FUNCTION
+
+FUNCTION isOnSensorR (p AS tFZX_VECTOR2d)
+  _SOURCE __gmEngine.hiddenScr
+  isOnSensorR = _RED32(POINT(p.x, p.y))
+  _SOURCE __gmEngine.displayScr
+END FUNCTION
+
+FUNCTION isOnGUISensorR (p AS tFZX_VECTOR2d)
+  _SOURCE __gmEngine.gui.sensorMap
+  isOnGUISensorR = _RED32(POINT(p.x, p.y))
+  _SOURCE __gmEngine.displayScr
+END FUNCTION
 
 '**********************************************************************************************
 '   Misc Tools
@@ -1269,6 +1344,7 @@ FUNCTION formatString$ (i AS STRING, length AS LONG)
   DIM l AS LONG
   DIM o AS STRING
   o = _TRIM$(i)
+  IF LEN(o) > length THEN o = LEFT$(o, length - 1) + ">"
   l = LEN(o)
   formatString = o + STRING$(length - l - 1, " ")
 END FUNCTION
@@ -1402,8 +1478,6 @@ SUB initInputDevice (icon AS LONG)
 END SUB
 
 SUB handleInputDevice (tilemap AS tTILEMAP)
-  STATIC AS tFZX_VECTOR2d mouse
-  STATIC AS tFZX_SETTINGS set
   __fzxSettings.mouse.doubleclickdelay = .25
   fzxHandleInputDevice
   IF __fzxInputDevice.mouse.mouseMode AND __fzxInputDevice.mouse.mouseOnScreen THEN
@@ -1450,7 +1524,7 @@ END SUB
 '**********************************************************************************************
 SUB _______________RENDERING (): END SUB
 SUB renderBodies (tilemap AS tTILEMAP)
-  DIM AS LONG i, layer
+  DIM AS LONG i, layer, sen, fld
   DIM hitcount AS LONG
   DIM AS tFZX_VECTOR2d viewPortSize, viewPortCenter, camUpLeft, BB
 
@@ -1518,10 +1592,12 @@ SUB renderBodies (tilemap AS tTILEMAP)
   '    IF hitcount > UBOUND(hits) THEN EXIT DO
   '  LOOP
   'END IF
+
   IF __gmEngine.overlayEnable THEN
     _PUTIMAGE , __gmEngine.overlayScr, __gmEngine.displayScr
     FOR i = 1 TO UBOUND(__gmGuiFields)
-      IF __gmGuiFields(i).buttonState = cFZX_MOUSE_HOVER THEN
+      ' Highlight the buttons
+      IF __gmGuiFields(i).buttonState = cFZX_MOUSE_HOVER AND __gmGuiFields(i).buttonId > 0 THEN
         _DEST __gmEngine.displayScr
         ' draw a highlight around buttons
         LINE (__gmGuiFields(i).position.x * 2, _
@@ -1530,6 +1606,22 @@ SUB renderBodies (tilemap AS tTILEMAP)
               __gmGuiFields(i).position.y * 2 + __gmGuiFields(i).size.y * 2), _
               _RGB32(255, 255, 255), B , &B0101010101010101
         __gmGuiFields(i).buttonState = cFZX_MOUSE_NONE
+      END IF
+
+      IF __gmEngine.gameMode.currentState = cFSM_GAMEMODE_LOOTMENU THEN
+        sen = isOnGUISensorR(__fzxInputDevice.mouse.position)
+
+        fld = isOnGUISensorG(__fzxInputDevice.mouse.position)
+        IF __gmGuiFields(i).control = 2 THEN
+          _PUTIMAGE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2), __gmGuiFields(i).listBox.img, __gmEngine.overlayScr, (0, 0)-(__gmGuiFields(i).size.x, __gmGuiFields(i).size.y)
+        END IF
+
+        IF __gmGuiFields(i).control = 2 THEN
+          ' highlight fields
+          IF fld = __gmGuiFields(i).listBox.id THEN
+            LINE (__gmGuiFields(i).position.x * 2, __gmGuiFields(i).position.y * 2 + ((sen - 1) * tilemap.tileHeight))-(__gmGuiFields(i).position.x * 2 + __gmGuiFields(i).size.x * 2, __gmGuiFields(i).position.y * 2 + ((sen - 1) * tilemap.tileHeight) + tilemap.tileHeight), _RGB32(200, 200, 0), B , &B0101010101010101
+          END IF
+        END IF
       END IF
 
       SELECT CASE __gmEngine.gui.hud
@@ -1547,9 +1639,18 @@ SUB renderBodies (tilemap AS tTILEMAP)
       END SELECT
     NEXT
   END IF
+  IF __gmEngine.debug THEN
+    _DEST __gmEngine.displayScr
+    _PUTIMAGE , __gmEngine.gui.sensorMap
+  END IF
+  IF __fzxInputDevice.keyboard.keyHitPosEdge = ASC("\") THEN
+    __gmEngine.debug = NOT __gmEngine.debug
+  END IF
+
 END SUB
 
 SUB initScreen (w AS LONG, h AS LONG, bpp AS LONG)
+  DIM AS LONG dw, dh
   _DELAY .5 ' Keeps from segfaulting when starting
 
   __gmEngine.renderPipeline = _MEMNEW(cSCREENLAYERS * 8)
@@ -1558,8 +1659,11 @@ SUB initScreen (w AS LONG, h AS LONG, bpp AS LONG)
   __gmEngine.hiddenScr = _NEWIMAGE(w, h, bpp)
   __gmEngine.overlayScr = _NEWIMAGE(w, h, bpp)
   __gmEngine.gui.sensorMap = _NEWIMAGE(w, h, bpp)
+  dw = _DESKTOPWIDTH
+  dh = _DESKTOPHEIGHT
   SCREEN __gmEngine.displayScr
-  _SCREENMOVE _MIDDLE
+
+  _SCREENMOVE (dw \ 2 - w \ 2) - 3, (dh \ 2 - h \ 2) - 29
 
 END SUB
 
@@ -2145,8 +2249,8 @@ END SUB
 
 SUB consoleText (tile() AS tTILE, tilemap AS tTILEMAP)
   DIM m AS tMESSAGE
-  DIM AS LONG iter, iter2, iter3, l, lc, chunck, bottom
-  DIM AS STRING ch, ch1, tempCon(100) ' temporary console broke up into lines
+  DIM AS LONG iter, iter2, l, lc, chunck, bottom
+  DIM AS STRING tempCon(100) ' temporary console broke up into lines
   l = lenTxt(__gmConsole.txt)
   ' PRINT #__logfile, " LenTXT:"; l
   lc = 0 ' line count
@@ -2628,21 +2732,27 @@ SUB XMLGUI (guiIDString AS STRING, _
             fh = getXMLArgValue(arg, " height=")
             __gmGuiFields(UBOUND(__gmGuiFields)).Id = objectType
             __gmGuiFields(UBOUND(__gmGuiFields)).menuType = menutype
-            __gmGuiFields(UBOUND(__gmGuiFields)).position.x = fx
-            __gmGuiFields(UBOUND(__gmGuiFields)).position.y = fy
-            __gmGuiFields(UBOUND(__gmGuiFields)).size.x = fw
-            __gmGuiFields(UBOUND(__gmGuiFields)).size.y = fh
+            __gmGuiFields(UBOUND(__gmGuiFields)).position.x = INT(fx)
+            __gmGuiFields(UBOUND(__gmGuiFields)).position.y = INT(fy)
+            __gmGuiFields(UBOUND(__gmGuiFields)).size.x = INT(fw)
+            __gmGuiFields(UBOUND(__gmGuiFields)).size.y = INT(fh)
             __gmGuiFields(UBOUND(__gmGuiFields)).scale = 1
         END SELECT
       CASE "map objectgroup object properties property"
         elementString = getXMLArgString$(arg, " name=")
         SELECT CASE elementString
+          CASE "CONTROL"
+            elementValue = getXMLArgValue(arg, " value=")
+            __gmGuiFields(UBOUND(__gmGuiFields)).control = elementValue
           CASE "ACTIVATED_TILE"
             elementValue = getXMLArgValue(arg, " value=")
             __gmGuiFields(UBOUND(__gmGuiFields)).activatedTile = elementValue
           CASE "BUTTON"
             elementValue = getXMLArgValue(arg, " value=")
             __gmGuiFields(UBOUND(__gmGuiFields)).buttonId = elementValue
+          CASE "LIST"
+            elementValue = getXMLArgValue(arg, " value=")
+            __gmGuiFields(UBOUND(__gmGuiFields)).listBox.id = elementValue
         END SELECT
     END SELECT
   NEXT
@@ -2653,7 +2763,7 @@ END SUB
 
 SUB XMLapplyAttributes (tile() AS tTILE, tilemap AS tTILEMAP, con() AS tFZX_STRINGTUPLE)
   DIM AS STRING context, arg, elementName, elementString, objectGroupName, objectName, objectType, propertyName, propertyValueString, objectID, mapLayer, elementValueString
-  DIM AS LONG index, firstId, start, comma, mapIndex, tempId, sensorImage, tempColor
+  DIM AS LONG index, firstId, start, comma, mapIndex, tempId, sensorImage, tempColor, ret, arc, qty, cnt
   DIM AS tFZX_VECTOR2d o, tempVec
   DIM AS _FLOAT elementValue, xp, yp, xs, ys, propertyValue, tempVal, xl, yl
   DIM AS tLIGHT lights(0)
@@ -2854,6 +2964,15 @@ SUB XMLapplyAttributes (tile() AS tTILE, tilemap AS tTILEMAP, con() AS tFZX_STRI
                   CASE "SCALE":
                     __gmEntity(__fzxBody(tempId).entityID).parameters.scale = propertyValue
                     fzxSetBody cFZX_PARAMETER_SCALETEXTURE, tempId, propertyValue, propertyValue
+                  CASE "CONTAINER_ADD", "CONTAINER_ADD_0", "CONTAINER_ADD_1", "CONTAINER_ADD_2", "CONTAINER_ADD_3"
+                    initContainer __gmEntity(__fzxBody(tempId).entityID).inventory, 10, -1
+                    propertyValueString = getXMLArgString$(arg, " value=")
+                    arc = getXMLArgSubValue(propertyValueString, "archtype=")
+                    qty = getXMLArgSubValue(propertyValueString, "qty=")
+                    FOR cnt = 1 TO qty
+                      ret = createItemInContainer(__gmItemArchtype(), __gmEntity(__fzxBody(tempId).entityID).inventory, arc)
+                      'PRINT #__logfile, "Created archtype:"; __gmItemArchtype(arc).nameString; "Ret from item creation:"; ret
+                    NEXT
                 END SELECT
               CASE "SENSOR": ' No properties
               CASE "WAYPOINT": ' No properties
@@ -2970,6 +3089,8 @@ SUB clearMapData (tile() AS tTILE, _
   REDIM __gmEntity(0) AS tENTITY
   ERASE message
   REDIM message(0) AS tMESSAGE
+  ERASE __gmGuiFields
+  REDIM __gmGuiFields(0) AS tGUI_FIELDS
 END SUB
 
 SUB levelSave
@@ -2987,7 +3108,7 @@ SUB levelSave
 END SUB
 
 SUB loadlevel
-  'REDIM __gmMap(0) AS tTILE
+
   OPEN _CWD$ + "\" + OSPathJoin$ + "Saves" + OSPathJoin$ + _TRIM$(__gmEngine.currentMap) + ".mp" FOR BINARY AS #56
   GET #56, , __gmMap()
   CLOSE #56

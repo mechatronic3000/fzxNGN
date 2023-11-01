@@ -12,13 +12,14 @@ $IF GLOBALVARS = UNDEFINED THEN
   DIM SHARED __logfile AS LONG
   DIM SHARED __gmLandmark(0) AS tLANDMARK
   DIM SHARED __gmPortals(0) AS tDOOR
-  DIM SHARED __gmEntity(1) AS tENTITY
+  DIM SHARED __gmEntity(0) AS tENTITY
   DIM SHARED __gmMap(0) AS tTILE
   DIM SHARED __gmGuiMap(0) AS tTILE
   DIM SHARED __gmGuiTile(0) AS tTILE
   DIM SHARED __gmGuiLayout(10) AS tTILEMAP
   DIM SHARED __gmGuiFields(0) AS tGUI_FIELDS
   DIM SHARED __gmConsole AS tCONSOLE
+  DIM SHARED __gmItemArchtype(0) AS tARCHTYPE
   'DIM SHARED tileMap AS tTILEMAP
   'DIM SHARED tile(0) AS tTILE
 

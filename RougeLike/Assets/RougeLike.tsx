@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<tileset version="1.8" tiledversion="1.8.1" name="RougeLike" tilewidth="16" tileheight="16" tilecount="2112" columns="48">
+<tileset version="1.5" tiledversion="1.7.2" name="RougeLike" tilewidth="16" tileheight="16" tilecount="2112" columns="48">
  <transformations hflip="1" vflip="1" rotate="1" preferuntransformed="0"/>
  <image source="Tilemap/colored_transparent_packed.png" width="768" height="704"/>
  <tile id="354">
@@ -225,6 +225,16 @@
    <property name="CHAR" value="Z"/>
   </properties>
  </tile>
+ <tile id="2040">
+  <properties>
+   <property name="CHAR" value="&gt;"/>
+  </properties>
+ </tile>
+ <tile id="2042">
+  <properties>
+   <property name="CHAR" value="&lt;"/>
+  </properties>
+ </tile>
  <tile id="2051" type="CHARACTER">
   <properties>
    <property name="CHAR" value="#"/>
@@ -258,6 +268,16 @@
  <tile id="2057" type="CHARACTER">
   <properties>
    <property name="CHAR" value="@"/>
+  </properties>
+ </tile>
+ <tile id="2088">
+  <properties>
+   <property name="CHAR" value="&gt;"/>
+  </properties>
+ </tile>
+ <tile id="2090">
+  <properties>
+   <property name="CHAR" value="&lt;"/>
   </properties>
  </tile>
 </tileset>
