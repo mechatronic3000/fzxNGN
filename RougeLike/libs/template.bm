@@ -1,5 +1,0 @@
-$IF qqqq = UNDEFINED THEN
-  $LET qqqq = TRUE
-
-
-$end if
