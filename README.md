@@ -16,26 +16,3 @@ There are increasing number of demos, most do not require assets. Enjoy!
 ![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/fzxNGNDemoSS/Screenshot.jpg)
 
 ![ANIM](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/fzxNGNDemoSS/cuttingboard.gif)
-
-# Rouge Like (Panacea)
-My new rouge-like game is also here. Due to fzxNGN being a core component they are together.This is still a work in progress and not very functional. You can travel to 3 maps total. Containers and inventory are not yet functional, so don't worry that your gold fluctuates depending which map you are in.
-
-Combat will be turned based, similar to Fallout 1 and 2.
-
-Crafting will be way different, it will hopefully be a mix of 2d physics as demonstrated in my fzxNGN demos(cutting board) and possibly cellular automata.
-
-
-![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/Rouge-Like/Panacea10.jpg)
-![SCREENSHOT](https://github.com/mechatronic3000/fzxNGN/blob/main/screenshots/Rouge-Like/Panacea11.jpg)
-
-
-Written in QB64. https://qb64phoenix.com/forum/index.php
-
-Used TILED as a level editor https://www.mapeditor.org/ 
-
-Graphics are provided be Kenney at www.kenney.nl
-
-Music is provided by Eric Matyas at www.soundimage.org
-
-
-
